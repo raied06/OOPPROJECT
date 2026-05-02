@@ -1,5 +1,5 @@
 #include <SFML/Graphics.hpp>
-#include <iostream>
+//#include <SFML/Window.hpp>
 int main() {
     sf::RenderWindow window(sf::VideoMode(800, 600), "Finally Works");
     sf::CircleShape shape(100.f);
@@ -16,6 +16,5 @@ int main() {
         window.draw(shape);
         window.display();
     }
-
     return 0;
 }
