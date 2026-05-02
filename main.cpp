@@ -24,6 +24,7 @@ int main()
 	/////////////////////////////////////////////////////////////////
 	// a cell is 64 by 64 pixels
 	// 'g' = grass tile
+	// jjjj
 
 	const int cell_size = 64;
 	const int height = 14;
