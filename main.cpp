@@ -136,11 +136,7 @@ int main()
 		}
 		
 		else if (fall) {
-			if (player_y >= positionBeforeJump) {
-				fall = false;
-			}
 			velocityY += acceleration;
-			if (velocityY > max_speed) velocityY = max_speed;
 			player_y += velocityY;
 		}
 		else {
