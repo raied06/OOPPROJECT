@@ -55,6 +55,7 @@ int main()
 
 	float max_speed = 5;
 	float velocityX = 0;
+	float velocityY = 0;
 	float acceleration = 0.5;
 
 	float scale_x = 0.2;
@@ -65,6 +66,12 @@ int main()
 
 	int Pheight = raw_img_y * scale_y;	// 94
 	int Pwidth = raw_img_x * scale_x;	// 119
+
+	float maxJumpHeight = Pheight * 1.5;
+	bool isJumping = false;
+	float positionBeforeJump = 0;
+	float jumpStart = 0;
+	bool fall = false;
 
 	Texture playerTex;
 	Sprite playerSprite;
@@ -109,8 +116,36 @@ int main()
 		{
 			velocityX = 0;
 		}
-
 		player_x += velocityX;
+
+		if (!isJumping && !fall)
+			if (Keyboard::isKeyPressed(Keyboard::Up)) {
+				isJumping = true;
+				positionBeforeJump = player_y;
+			}
+		if (isJumping) {
+			velocityY -= acceleration;
+			if (velocityY < -max_speed) velocityY = -max_speed;
+			player_y += velocityY;
+			jumpStart += velocityY;
+			if (jumpStart <= -maxJumpHeight) {
+				isJumping = false;
+				jumpStart = 0;
+				fall = true;
+			}
+		}
+		
+		else if (fall) {
+			velocityY += acceleration;
+			player_y += velocityY;
+			if (player_y >= positionBeforeJump) {
+				fall = false;
+			}
+		}
+		else {
+			velocityY = 0;
+		}
+		
 
 		window.clear();
 
