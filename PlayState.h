@@ -21,22 +21,20 @@ private:
     float player_x;
     float player_y;
     float max_speed;
+    float gravity;
     float velocityX;
     float velocityY;
     float acceleration;
 
     // Jump mechanics
-    float maxJumpHeight;
-    float positionBeforeJump;
-    float jumpStart;
-    bool isJumping;
-    bool fall;
+    bool isOnGround;
+    float initialJumpSpeed;
 
 public:
     PlayState();
     ~PlayState() override;
 
-    void handleInput(sf::Event& event, sf::RenderWindow& window) override;
+    void handleInput(sf::Event& event, sf::RenderWindow& window) override; // Overriden function from GameState class
     void update(float dt) override;
     void render(sf::RenderWindow& window) override;
 };

@@ -10,23 +10,25 @@ private:
 public:
     GameStateManager(int cap = 5) {
         capacity = cap;
-        topIndex = -1;
-        states = new GameState * [capacity]; //allocate the array of pointers
+        topIndex = -1; // bcz the indexes of arrays start from index 0, and if we give the top index a value of 0,
+                       // it would mean that there would be a state at index 0, which we actually haven't given yet,
+                       // so we give a value of -1 and whenever a state is inserted, this value is incremented.
+        states = new GameState * [capacity];
     }
 
     ~GameStateManager() {
-        // 1. Delete all the actual state objects we allocated
+        //Deleting the state objects at indexes
         for (int i = 0; i <= topIndex; i++) {
             delete states[i];
         }
-        // 2. Delete the array holding the pointers
+        // deleting the array of states pointer
         delete[] states;
     }
 
     void pushState(GameState* state) {
-        // If the stack is full, we have to manually resize the array
-        if (topIndex >= capacity - 1) {
-            capacity *= 2;
+        // checking if the array (stack) is full or not, if full then doubling its size first and then pushing the state
+        if (topIndex >= this->capacity - 1) {
+            this->capacity *= 2;
             GameState** temp = new GameState * [capacity];
             for (int i = 0; i <= topIndex; i++) {
                 temp[i] = states[i];
@@ -35,14 +37,14 @@ public:
             states = temp;   // Point to new array
         }
 
-        // Push the new state
+        // Pushing the new state
         states[++topIndex] = state;
     }
 
-    void popState() {
+    void popState() { // deletes the object at the top index and top index is decremented so that the previous states start to run
         if (topIndex >= 0) {
-            delete states[topIndex]; // Delete the actual object
-            states[topIndex] = nullptr; // Avoid dangling pointers
+            delete states[topIndex];
+            states[topIndex] = nullptr;
             topIndex--;
         }
     }

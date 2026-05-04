@@ -3,7 +3,7 @@
 PlayState::PlayState() {
     std::cout << "PlayState Initialized.\n";
 
-    //initialize level constraints
+    //initializing level constraints
     cell_size = 64;
     height = 14;
     width = 110;
@@ -18,6 +18,12 @@ PlayState::PlayState() {
     lvl[11][6] = 'g';
     lvl[11][7] = 'g';
     lvl[11][8] = 'g';
+    lvl[11][9] = 'g';
+    lvl[11][10] = 'g';
+    lvl[11][11] = 'g';
+    lvl[11][12] = 'g';
+    lvl[11][13] = 'g';
+    lvl[11][14] = 'g';
 
     if (!wallTex1.loadFromFile("Sprites/blocks/grass_block_side.png")) {
         std::cout << "ERROR: Failed to load grass texture!\n";
@@ -27,7 +33,8 @@ PlayState::PlayState() {
     //initialize player stats
     player_x = 380.0f;
     player_y = 610.0f;
-    max_speed = 5.0f;
+    max_speed = 300.0f;
+    gravity = 1500.0f;
     velocityX = 0.0f;
     velocityY = 0.0f;
     acceleration = 0.5f;
@@ -37,11 +44,8 @@ PlayState::PlayState() {
     int raw_img_y = 470;
     int Pheight = raw_img_y * scale_y;
 
-    maxJumpHeight = Pheight * 1.5f;
-    isJumping = false;
-    positionBeforeJump = 0.0f;
-    jumpStart = 0.0f;
-    fall = false;
+    isOnGround = true;
+    initialJumpSpeed = -700.0f; // The instant upward burst
 
     if (!playerTex.loadFromFile("Sprites/Character.png")) {
         std::cout << "ERROR: Failed to load player texture!\n";
@@ -65,58 +69,45 @@ void PlayState::handleInput(sf::Event& event, sf::RenderWindow& window) {
 }
 
 void PlayState::update(float dt) {
-    //real-time continuous input checking goes here
-
-    //horizontal Movement
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-        velocityX += acceleration;
-        if (velocityX > max_speed) velocityX = max_speed;
+    // Horizontal Movement
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+        velocityX = max_speed;
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-        velocityX -= acceleration;
-        if (velocityX < -max_speed) velocityX = -max_speed;
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+        velocityX = -max_speed;
     }
     else {
         velocityX = 0.0f;
     }
 
-    player_x += velocityX;
+    // Apply horizontal speed multiplied by delta time
+    player_x += velocityX * dt;
 
-    // Vertical Movement (Jump Logic)
-    if (!isJumping && !fall) {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-            isJumping = true;
-            positionBeforeJump = player_y;
-        }
-    }
+    // 2. Vertical Movement & Physics
+    // Gravity is ALWAYS pulling you down, every single frame.
+    velocityY += gravity * dt;
 
-    if (isJumping) {
-        velocityY -= acceleration;
-        if (velocityY < -max_speed) velocityY = -max_speed;
+    // Apply vertical speed multiplied by delta time
+    player_y += velocityY * dt;
 
-        player_y += velocityY;
-        jumpStart += velocityY;
-
-        if (jumpStart <= -maxJumpHeight) {
-            isJumping = false;
-            jumpStart = 0.0f;
-            fall = true;
-        }
-    }
-    else if (fall) {
-        velocityY += acceleration;
-        player_y += velocityY;
-
-        if (player_y >= positionBeforeJump) {
-            fall = false;
-            player_y = positionBeforeJump; //snap to ground to prevent sinking
-        }
+    // 3. Ground Collision (Hardcoded floor at 610.0f)
+    if (player_y >= 610.0f) {
+        player_y = 610.0f;     // Snap exactly to the floor
+        velocityY = 0.0f;      // KILL the downward momentum (This was your bug)
+        isOnGround = true;     // We are safely on the dirt
     }
     else {
-        velocityY = 0.0f;
+        isOnGround = false;    // We are in the air
     }
 
-    //apply the final calculated position to the sprite
+    // 4. The Jump Trigger
+    // You can ONLY jump if you are currently touching the ground
+    if (isOnGround && sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+        velocityY = initialJumpSpeed; // Apply instant negative (upward) speed
+        isOnGround = false;
+    }
+
+    // Update the visual sprite with the new math
     playerSprite.setPosition(player_x, player_y);
 }
 
