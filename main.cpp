@@ -1,9 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <cmath>
-#include <SFML/Graphics.hpp>
-#include <SFML/Audio.hpp>
-#include <SFML/Window.hpp>
+#include "Game.h"
 
 using namespace sf;
 using namespace std;
@@ -177,4 +172,9 @@ void display_level(RenderWindow& window, const int height, const int width, char
 			}
 		}
 	}
+}
+int main() {
+    Game engine;
+    engine.run();
+    return 0;
 }
