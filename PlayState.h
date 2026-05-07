@@ -43,30 +43,25 @@
 #pragma once
 #include "GameState.h"
 #include "Level.h"
+#include "Player.h"
+#include "EntityManager.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
-class PlayState : public GameState {
+class PlayState : public GameState
+{
 private:
-    Level* level;          // owned by this state, freed in destructor
+    Level* level;    // owns the world
+    EntityManager* entities; // owns all entities including player
 
-    // Player sprite & physics (TEMPORARY - moves to PlayerSoldier in Phase 4)
-    sf::Texture playerTex;
-    sf::Sprite  playerSprite;
+    // Non-owning convenience pointer to the player entity so we can
+    // follow it with the camera without searching the manager every frame.
+    // EntityManager handles the actual delete - do NOT delete this here.
+    Player* player;
+
     sf::Texture bgTex;
     sf::Sprite  bgSprite;
-    float playerX;
-    float playerY;
-    float playerWidth;
-    float playerHeight;
-    float maxSpeed;
-    float gravity;
-    float velocityX;
-    float velocityY;
-    bool  isOnGround;
-    float initialJumpSpeed;
 
-    // Camera (world-space top-left corner of the viewport)
     float cameraX;
     float cameraY;
 

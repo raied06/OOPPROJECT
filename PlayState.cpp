@@ -160,126 +160,100 @@
 //}
 #include "PlayState.h"
 
-PlayState::PlayState() {
+PlayState::PlayState()
+    : level(nullptr), entities(nullptr), player(nullptr),
+    cameraX(0.0f), cameraY(0.0f)
+{
     std::cout << "PlayState Initialized.\n";
 
-    // Build the world. Width = 200 tiles, Height = 30, cell = 64px.
+    // World first - Player constructor needs a valid Level* to store
     level = new Level(200, 14, 64);
     level->buildTestMap();
 
-    // Player setup (temporary - will move to PlayerSoldier).
-    if (!playerTex.loadFromFile("Sprites/Armaghan.png")) {
-        std::cout << "ERROR: player texture failed\n";
-    }
-    playerSprite.setTexture(playerTex);
-    playerSprite.setScale(0.2f, 0.2f);
-    playerWidth = playerTex.getSize().x * 0.2f;
-    playerHeight = playerTex.getSize().y * 0.2f;
+    entities = new EntityManager(32);
 
-    playerX = 200.0f;
-    playerY = 200.0f;
-    maxSpeed = 300.0f;
-    gravity = 1500.0f;
-    velocityX = 0.0f;
-    velocityY = 0.0f;
-    isOnGround = false;
-    initialJumpSpeed = -700.0f;
+    // Spawn the player. EntityManager takes ownership from this point.
+    // We keep a raw non-owning pointer for camera tracking.
+    player = new Player(200.0f, 200.0f, level);
+    entities->add(player); // manager owns it now
 
-    cameraX = 0.0f;
-    cameraY = 0.0f;
     if (!bgTex.loadFromFile("Sprites/Background.png")) {
         std::cout << "ERROR: background texture failed\n";
     }
     bgSprite.setTexture(bgTex);
 
-    // Stretch it to fill the whole window (1600x900)
     float scaleY = 900.0f / bgTex.getSize().y;
-    bgSprite.setScale(scaleY, scaleY);   // uniform scale - no stretching
+    bgSprite.setScale(scaleY, scaleY);
 }
 
-PlayState::~PlayState() {
+PlayState::~PlayState()
+{
+    // EntityManager destructor deletes all entities including player.
+    // Delete manager before level so entities can't reference a freed level
+    // during their own destructors (not an issue currently but good habit).
+    delete entities;
+    entities = nullptr;
+    player = nullptr; // dangling pointer guard - manager already freed it
+
     delete level;
+    level = nullptr;
 }
 
-void PlayState::handleInput(sf::Event& event, sf::RenderWindow& window) {
-    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
-        window.close();
-    }
-}
-
-void PlayState::update(float dt) {
-    // ----- Horizontal input -----
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))      velocityX = maxSpeed;
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) velocityX = -maxSpeed;
-    else                                                  velocityX = 0.0f;
-
-    playerX += velocityX * dt;
-
-    // ----- Gravity -----
-    velocityY += gravity * dt;
-    playerY += velocityY * dt;
-
-    // ----- Ground collision (delegates to Level) -----
-    float feetY = playerY + playerHeight + 1.0f;
-    float leftX = playerX + 2.0f;
-    float rightX = playerX + playerWidth - 2.0f;
-
-    int hitRow;
-    if (level->checkGroundBelow(feetY, leftX, rightX, hitRow)) {
-        if (velocityY > 0.0f) {
-            playerY = hitRow * level->getCellSize() - playerHeight;
-            velocityY = 0.0f;
-            isOnGround = true;
+void PlayState::handleInput(sf::Event& event, sf::RenderWindow& window)
+{
+    // Per academic constraints: no event.key.code.
+    // Escape is handled via event.type only, checking scancode instead.
+    if (event.type == sf::Event::KeyPressed) {
+        if (event.key.scancode == sf::Keyboard::Scan::Escape) {
+            window.close();
         }
     }
-    else {
-        isOnGround = false;
-    }
-
-    // ----- Jump -----
-    if (isOnGround && sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-        velocityY = initialJumpSpeed;
-        isOnGround = false;
-    }
-
-    playerSprite.setPosition(playerX - cameraX, playerY - cameraY);
-
-    // ----- Camera follows player (centered horizontally) -----
-    // Player's current position on screen (not in world)
-    float screenPosX = playerX - cameraX;
-
-    float leftThreshold = 1600.0f / 3.0f;        // ~533px - left boundary of dead zone
-    float rightThreshold = 2.0f * 1600.0f / 3.5f; // ~1067px - right boundary of dead zone
-
-    if (screenPosX < leftThreshold) {
-        cameraX = playerX - leftThreshold;
-    }
-    else if (screenPosX > rightThreshold) {
-        cameraX = playerX - rightThreshold;
-    }
-    // else: player is in middle third, camera does not move
-
-    // Clamp so camera never goes past level edges
-    if (cameraX < 0.0f) cameraX = 0.0f;
-    float maxCamX = (float)(level->getWidthInPixels() - 1600);
-    if (cameraX > maxCamX) cameraX = maxCamX;
+    // Continuous player input (movement, jump) is polled inside
+    // Player::handleInput() which runs every update() tick via isKeyPressed.
+    // No need to route it through the event queue here.
 }
 
-void PlayState::render(sf::RenderWindow& window) {
-    // --- Tiling parallax background ---
+void PlayState::update(float dt)
+{
+    // Cap dt so a lag spike doesn't teleport entities through walls.
+    // At 30fps minimum, dt never exceeds ~33ms. Physics stays stable.
+    if (dt > 1.0f / 30.0f) dt = 1.0f / 30.0f;
+
+    entities->updateAll(dt);
+    entities->removeDead(); // sweep dead entities at END of update, never mid-loop
+
+    // After removeDead(), check if player got cleaned up (died, fell out of world, etc.)
+    // If player is gone, don't crash trying to follow it with the camera.
+    if (player != nullptr && !player->getIsActive()) {
+        player = nullptr; // manager already freed it, just null our reference
+    }
+
+    // Camera follows the player (dead-zone style, same logic as before)
+    if (player != nullptr) {
+        float playerScreenX = player->getPosX() - cameraX;
+        float leftThreshold = 1600.0f / 3.0f;
+        float rightThreshold = 2.0f * 1600.0f / 3.5f;
+
+        if (playerScreenX < leftThreshold) {
+            cameraX = player->getPosX() - leftThreshold;
+        }
+        else if (playerScreenX > rightThreshold) {
+            cameraX = player->getPosX() - rightThreshold;
+        }
+
+        if (cameraX < 0.0f) cameraX = 0.0f;
+        float maxCamX = (float)(level->getWidthInPixels() - 1600);
+        if (cameraX > maxCamX) cameraX = maxCamX;
+    }
+}
+
+void PlayState::render(sf::RenderWindow& window)
+{
+    // Tiling parallax background (same logic as before, just moved here)
     float bgWidth = (float)bgTex.getSize().x * bgSprite.getScale().x;
-    float bgHeight = (float)bgTex.getSize().y * bgSprite.getScale().y;
-
-    // How far the background has scrolled (parallax at 20% speed)
     float bgScrollX = cameraX * 0.2f;
-
-    // Find the starting offset so tiles line up seamlessly
-    // fmod gives the remainder - tells us where the first tile begins
     float startOffset = bgScrollX - (int)(bgScrollX / bgWidth) * bgWidth;
-
-    // Draw enough copies to always cover the full screen width
-    // We need ceil(1600 / bgWidth) + 1 tiles to guarantee no gap
-    int numTiles = (int)(1600.0f / bgWidth) + 2;
+    int   numTiles = (int)(1600.0f / bgWidth) + 2;
 
     for (int i = 0; i < numTiles; i++) {
         bgSprite.setPosition(i * bgWidth - startOffset, 0.0f);
@@ -287,5 +261,5 @@ void PlayState::render(sf::RenderWindow& window) {
     }
 
     level->render(window, cameraX, cameraY);
-    window.draw(playerSprite);
+    entities->renderAll(window, cameraX, cameraY);
 }
