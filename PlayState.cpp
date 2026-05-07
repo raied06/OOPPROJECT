@@ -166,7 +166,8 @@ PlayState::PlayState()
 {
     std::cout << "PlayState Initialized.\n";
 
-    // World first - Player constructor needs a valid Level* to store
+    // Creating world first, Player constructor needs a valid Level* to store, so
+    // build the world. (Width = 200 tiles, Height = 14, cell = 64px)
     level = new Level(200, 14, 64);
     level->buildTestMap();
 
@@ -230,17 +231,16 @@ void PlayState::update(float dt)
 
     // Camera follows the player (dead-zone style, same logic as before)
     if (player != nullptr) {
-        float playerScreenX = player->getPosX() - cameraX;
-        float leftThreshold = 1600.0f / 3.0f;
-        float rightThreshold = 2.0f * 1600.0f / 3.5f;
+        float playerScreenX = player->getPosX() - cameraX; // This tells the player's position on the screen rn
+        //float leftThreshold = 1600.0f / 3.0f;
+        float rightThreshold = 1600.0f - (1600.0f / 3); //2.0f * 1600.0f / 3.5f; // Background only moves when player enters the 3rd 1/3 of the screen.
 
-        if (playerScreenX < leftThreshold) {
-            cameraX = player->getPosX() - leftThreshold;
+        if (playerScreenX > rightThreshold) {
+        cameraX = player->getPosX() - rightThreshold;
         }
-        else if (playerScreenX > rightThreshold) {
-            cameraX = player->getPosX() - rightThreshold;
-        }
+     // else: player is in the first and middle third, camera does not move
 
+        // Clamping camera values
         if (cameraX < 0.0f) cameraX = 0.0f;
         float maxCamX = (float)(level->getWidthInPixels() - 1600);
         if (cameraX > maxCamX) cameraX = maxCamX;
@@ -249,11 +249,16 @@ void PlayState::update(float dt)
 
 void PlayState::render(sf::RenderWindow& window)
 {
-    // Tiling parallax background (same logic as before, just moved here)
     float bgWidth = (float)bgTex.getSize().x * bgSprite.getScale().x;
-    float bgScrollX = cameraX * 0.2f;
+    float bgScrollX = cameraX * 0.2f; // How far the background has scrolled (speed is 20% of player's speed)
+    // This gives us that how much pixels (starting from left of a panel) have passed and how much I have to display for thr first panel
+    // This logic basically loops the image in the background, four tiles of bg image run in a loop in background, instead of loading all 
+    // background pixles with background every frame (to avoid lagging)
+
     float startOffset = bgScrollX - (int)(bgScrollX / bgWidth) * bgWidth;
-    int   numTiles = (int)(1600.0f / bgWidth) + 2;
+    
+    // Finding that how many tiles of bg image do we need to run in a loop so that it seems to be never-ending
+    int numTiles = (int)(1600.0f / bgWidth) + 2;
 
     for (int i = 0; i < numTiles; i++) {
         bgSprite.setPosition(i * bgWidth - startOffset, 0.0f);

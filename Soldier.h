@@ -13,6 +13,8 @@ protected:
 
     bool  onGround;
     bool  facingRight;
+    float baseScaleX; // Magnitude of horizontal scale
+    float baseScaleY; // magnitude of verticl scale
 
     float moveSpeed;      // pixels/sec horizontal
     float jumpStrength;   // instantaneous upward velocity (negative value)
@@ -41,6 +43,8 @@ public:
     void moveRight();
     void stopHorizontal();
     void jump();           // only fires if onGround == true
+
+    void setBaseScale(float x, float y);
 
     bool isOnGround() const { return onGround; }
 };

@@ -1,7 +1,7 @@
 #include "Game.h"
 #include "PlayState.h"
 
-Game::Game() : window(sf::VideoMode(1600, 900), "Metal Slug - Phase 1", sf::Style::Close) {
+Game::Game() : window(sf::VideoMode(1600, 900), "METAL SLUG", sf::Style::Close) {
     window.setFramerateLimit(60); // Upper cap forr frames (max fps that we can get are 60, not more than this)
     window.setVerticalSyncEnabled(true);
 

@@ -51,7 +51,12 @@
 class PlayState : public GameState
 {
 private:
-    Level* level;    // owns the world
+    Level* level;    // This basically means that the Level object is not born yet, 
+                  // it will born when constructor is called. + (composition relation) we control its birth as well as death
+        // 1. This pointer allow to pass any value for the dimensions of grid.
+        // 2. Interchange levels at runtime, 
+        // 3. We can replace the old level with a new one
+
     EntityManager* entities; // owns all entities including player
 
     // Non-owning convenience pointer to the player entity so we can
@@ -62,6 +67,7 @@ private:
     sf::Texture bgTex;
     sf::Sprite  bgSprite;
 
+    // Camera (world-space top-left corner of the viewport)
     float cameraX;
     float cameraY;
 

@@ -90,7 +90,7 @@ void Level::destroyBlock(int row, int col)
 bool Level::isSolid(int row, int col) const
 {
     if (row < 0 || row >= gridHeight) return false;
-    if (col < 0 || col >= gridWidth)  return false;
+    if (col < 0 || col >= gridWidth)  return false; // Returning true because player can't move into abyss
 
     return (lvl[row][col] == 'g' || lvl[row][col] == 's' ||
         lvl[row][col] == 'd' || lvl[row][col] == 'b');
@@ -104,6 +104,11 @@ bool Level::isSolidAtPixel(float x, float y) const
     // sampling a completely wrong tile.
     int col = (int)(x / cell_size);
     int row = (int)(y / cell_size);
+
+    if (row < 0 || row >= gridHeight || col < 0 || col >= gridWidth) {
+        return false;
+    }
+
 
     return isSolid(row, col);
 }
@@ -154,6 +159,12 @@ bool Level::checkRightWall(float rightX, float topY, float bottomY) const
 
 void Level::render(sf::RenderWindow& window, float cameraX, float cameraY)
 {
+    // Computing that how much panels/tiles fall inside the visible 
+    // window, without calculating this, the background will still move
+    // and game will work, but, it would lag drastically and fps will drop
+    // bcz a level with width 250 would render 200*60 = 12000 sprites per
+    // frame.
+
     int startCol = (int)(cameraX / cell_size);
     int startRow = (int)(cameraY / cell_size);
     int endCol = startCol + ((int)window.getSize().x / cell_size) + 2;
@@ -175,6 +186,7 @@ void Level::render(sf::RenderWindow& window, float cameraX, float cameraY)
             else if (c == 'b') blockSprite.setTexture(stoneTex); // placeholder
             else continue;
 
+            // The position of the block would be World position MINUS camera offset.
             float screenX = j * (float)cell_size - cameraX;
             float screenY = i * (float)cell_size - cameraY;
             blockSprite.setPosition(screenX, screenY);
@@ -195,4 +207,5 @@ void Level::buildTestMap()
     for (int j = 20; j < 28; j++) lvl[gridHeight - 8][j] = 'g';
     for (int j = 35; j < 42; j++) lvl[gridHeight - 12][j] = 'g';
     for (int j = 55; j < 60; j++) lvl[gridHeight - 6][j] = 'g';
+   // for (int i = 0; i < gridHeight; i++) lvl[i][0] = 'g';
 }
