@@ -20,13 +20,13 @@ Level::Level(int w, int h, int cell_size) : gridHeight(h), gridWidth(w), cell_si
     if (!dirtTex.loadFromFile("Sprites/blocks/dirt.png")) {
         std::cout << "ERROR: dirt texture failed to load\n";
     }
+    if (!bedrockTex.loadFromFile("Sprites/blocks/bedrock.png")) {
+        std::cout << "ERROR: dirt texture failed to load\n";
+    }
 }
 
 Level::~Level()
 {
-    // BUG FIX: was looping with gridWidth before. We allocated gridHeight rows,
-    // so we must free exactly gridHeight rows. Using gridWidth (200) on a 14-row
-    // grid means deleting 186 pointers that were never yours - instant corruption.
     for (int i = 0; i < gridHeight; i++) {
         delete[] lvl[i];
         lvl[i] = nullptr;
@@ -90,7 +90,7 @@ void Level::destroyBlock(int row, int col)
 bool Level::isSolid(int row, int col) const
 {
     if (row < 0 || row >= gridHeight) return false;
-    if (col < 0 || col >= gridWidth)  return false; // Returning true because player can't move into abyss
+    if (col < 0 || col >= gridWidth)  return false;
 
     return (lvl[row][col] == 'g' || lvl[row][col] == 's' ||
         lvl[row][col] == 'd' || lvl[row][col] == 'b');
@@ -98,10 +98,6 @@ bool Level::isSolid(int row, int col) const
 
 bool Level::isSolidAtPixel(float x, float y) const
 {
-    // BUG FIX: was `row = x / cell_size` and `col = y / cell_size` before.
-    // In a 2D array indexed as lvl[row][col], row = vertical = Y axis,
-    // col = horizontal = X axis. Swapping them means every solid check was
-    // sampling a completely wrong tile.
     int col = (int)(x / cell_size);
     int row = (int)(y / cell_size);
 
@@ -183,10 +179,10 @@ void Level::render(sf::RenderWindow& window, float cameraX, float cameraY)
             if (c == 'g') blockSprite.setTexture(grassTex);
             else if (c == 's') blockSprite.setTexture(stoneTex);
             else if (c == 'd') blockSprite.setTexture(dirtTex);
-            else if (c == 'b') blockSprite.setTexture(stoneTex); // placeholder
+            else if (c == 'b') blockSprite.setTexture(bedrockTex);
             else continue;
 
-            // The position of the block would be World position MINUS camera offset.
+            // The position of the block would be World position - camera offset.
             float screenX = j * (float)cell_size - cameraX;
             float screenY = i * (float)cell_size - cameraY;
             blockSprite.setPosition(screenX, screenY);
@@ -206,6 +202,5 @@ void Level::buildTestMap()
     }
     for (int j = 20; j < 28; j++) lvl[gridHeight - 8][j] = 'g';
     for (int j = 35; j < 42; j++) lvl[gridHeight - 12][j] = 'g';
-    for (int j = 55; j < 60; j++) lvl[gridHeight - 6][j] = 'g';
-   // for (int i = 0; i < gridHeight; i++) lvl[i][0] = 'g';
+    for (int j = 55; j < 60; j++) lvl[gridHeight - 10][j] = 'g';
 }

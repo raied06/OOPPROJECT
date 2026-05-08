@@ -12,6 +12,7 @@ private:
 	sf::Texture grassTex;
 	sf::Texture stoneTex;
 	sf::Texture dirtTex;
+	sf::Texture bedrockTex;
 	sf::Sprite blockSprite; // reused for every draw call
 public:
 // CONSTRUCTOR
@@ -43,6 +44,6 @@ public:
 
 	void render(sf::RenderWindow& window, float cameraX, float cameraY); // Only draws visible tiles
 
-	void buildTestMap(); // DELETE IT LATER
+	void buildTestMap(); // **DELETE IT LATER**
 };
 

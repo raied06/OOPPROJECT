@@ -9,7 +9,7 @@ protected:
     float entityHeight;
     float velocityX;
     float velocityY;
-    bool isActive;   // false means "delete me on next cleanup pass"
+    bool isActive;   // false means we will delete it in next frames cleanup
 public:
 // CONSTRUCTOR
     Entity(float x, float y, float w, float h);

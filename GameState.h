@@ -1,6 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-class GameState {
+class GameState { // Interface class
 public:
 	virtual ~GameState(){}
 	virtual void handleInput(sf::Event& event, sf::RenderWindow& window) = 0;

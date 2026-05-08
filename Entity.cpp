@@ -65,6 +65,10 @@ void Entity::deactivateEntity()
 
 bool Entity::isOverlapping(const Entity* other) const
 {
+	// The overlap is checked by doing the opposite, rather then checking that do the x and y coordinates of both the
+	// entities overlap, we check that if one entity is entirely to the right,left,top or bottom of the other and vice versa. 
+	// If any of this is true, we simply return false which means that they are not overlapping, and if none of this check 
+	// chains is true, this means that entities are overlapping so we return true.
 	if (other == nullptr)
 		return false;
 	if (this->isActive && other->isActive) {

@@ -1,12 +1,11 @@
 #include "Player.h"
 #include <iostream>
 
-// Target rendered height in pixels. Tune this one number to resize the player.
-// Slightly less than one tile (64px) so they fit under low ceilings.
-static const float PLAYER_H = 122.0f;
+static const float PLAYER_H = 150.0f;
+// used to assign a same hitbox to every animation state as well as it is a fix height of every player (Marco, Tarma etc)
 
 Player::Player(float x, float y, const Level* lvl)
-    : Soldier(x, y, 1.0f, PLAYER_H, lvl),   // width=1 placeholder, fixed below
+    : Soldier(x, y, 1.0f, PLAYER_H, lvl),
     jumpHeldLastFrame(false)
 {
     if (!texture.loadFromFile("Sprites/Char.png")) {
@@ -14,8 +13,6 @@ Player::Player(float x, float y, const Level* lvl)
     }
     sprite.setTexture(texture);
 
-    // ONE scale factor derived from height — applied to BOTH axes.
-    // This preserves the original artwork's proportions exactly.
     float uniformScale = PLAYER_H / (float)texture.getSize().y;
     float actualWidth = (float)texture.getSize().x * uniformScale;
 
@@ -34,14 +31,19 @@ void Player::handleInput()
     using sf::Keyboard;
 
     bool left = Keyboard::isKeyPressed(Keyboard::A) || Keyboard::isKeyPressed(Keyboard::Left);
+    // The snap logic of player if it tries to enter the left side of the screen is in PlayState.cpp (update function)
     bool right = Keyboard::isKeyPressed(Keyboard::D) || Keyboard::isKeyPressed(Keyboard::Right);
     bool jumpHeld = Keyboard::isKeyPressed(Keyboard::W) || Keyboard::isKeyPressed(Keyboard::Space);
 
-    if (left && !right)      moveLeft();
-    else if (right && !left) moveRight();
-    else                     stopHorizontal();
+    if (left && !right)      
+        moveLeft();
+    else if (right && !left) 
+        moveRight();
+    else                     
+        stopHorizontal();
 
-    if (jumpHeld && !jumpHeldLastFrame) jump();
+    if (jumpHeld && !jumpHeldLastFrame) 
+        jump();
     jumpHeldLastFrame = jumpHeld;
 }
 

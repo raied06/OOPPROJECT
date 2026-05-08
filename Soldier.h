@@ -2,47 +2,45 @@
 #include "Entity.h"
 #include "Level.h"
 
-// Soldier is the "anything that walks and obeys gravity" base.
-// Player inherits from this. Enemy grunts will too.
-// It does NOT know about keyboard input - that's Player's job.
+// Soldier is anything that walks and obeys gravity base.
+// Player inherits from this. (Enemy grunts will too)
 
 class Soldier : public Entity
 {
 protected:
-    const Level* level;  // non-owning. Level is owned by PlayState.
+    const Level* level;  // not owned by Soldier, Level is owned by PlayState so will not be deleted here (aggregation)
 
-    bool  onGround;
+    bool  onGround; //Used to answer two things, 1.To check if jump is allowed or not, 2.Is player standing on the ground?
     bool  facingRight;
     float baseScaleX; // Magnitude of horizontal scale
-    float baseScaleY; // magnitude of verticl scale
+    float baseScaleY; // magnitude of verticle scale
 
-    float moveSpeed;      // pixels/sec horizontal
-    float jumpStrength;   // instantaneous upward velocity (negative value)
-    float gravity;        // pixels/sec^2 downward acceleration
-    float maxFallSpeed;   // terminal velocity clamp - prevents tunneling at high dt
+    float moveSpeed;      // how many pixels/sec (horizontally only)
+    float jumpStrength;   // instantaneous upward velocity (would always be negative)
+    float gravity;        // pixels/sec^2 (downward acceleration)
+    float maxFallSpeed;   // terminal velocity clamp
 
     sf::Texture texture;
     sf::Sprite  sprite;
 
-    // Separates horizontal and vertical resolution so we don't get
-    // corner-sticking or wall-clipping artifacts.
     void resolveHorizontal();
-    void resolveVertical(float dt);
+    // Calculates the checks of Horizontal Movement (wall collisions etc) 
+
+    void resolveVertical(float dt); // Gravity is handeled in this func
+    // Calculates the checks of vertical movement 
 
 public:
     Soldier(float x, float y, float w, float h, const Level* lvl);
     virtual ~Soldier();
 
-    // Soldier provides a default update. Player can override if needed.
     virtual void update(float dt) override;
     virtual void render(sf::RenderWindow& window, float cameraX, float cameraY) override;
 
-    // Called by derived classes (Player) to set intent each frame.
-    // Soldier doesn't poll input itself.
+    // Below functions are used by the derived classes (players) bcz they will get inputs, not Soldier
     void moveLeft();
     void moveRight();
     void stopHorizontal();
-    void jump();           // only fires if onGround == true
+    void jump();
 
     void setBaseScale(float x, float y);
 

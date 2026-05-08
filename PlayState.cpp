@@ -1,163 +1,3 @@
-//#include "PlayState.h"
-//
-//PlayState::PlayState() {
-//    std::cout << "PlayState Initialized.\n";
-//
-//    //initializing level constraints
-//    cell_size = 64;
-//    height = 14;
-//    width = 110;
-//
-//    //manually allocate the 2D array with raw pointers. 
-//    lvl = new char* [height];
-//    for (int i = 0; i < height; i++) {
-//        lvl[i] = new char[width] {'\0'};
-//    }
-//
-//    lvl[11][5] = 'g';
-//    lvl[11][6] = 'g';
-//    lvl[11][7] = 'g';
-//    lvl[11][8] = 'g';
-//    lvl[11][9] = 'g';
-//    lvl[11][10] = 'g';
-//    lvl[11][11] = 'g';
-//    lvl[11][12] = 'g';
-//    lvl[11][13] = 'g';
-//    lvl[11][14] = 'g';
-//
-//    if (!wallTex1.loadFromFile("Sprites/blocks/grass_block_side.png")) {
-//        std::cout << "ERROR: Failed to load grass texture!\n";
-//    }
-//    wallSprite1.setTexture(wallTex1);
-//
-//    //initialize player stats
-//    player_x = 380.0f;
-//    player_y = 610.0f;
-//    max_speed = 300.0f;
-//    gravity = 1500.0f;
-//    velocityX = 0.0f;
-//    velocityY = 0.0f;
-//    acceleration = 0.5f;
-//
-//    float scale_x = 0.2f;
-//    float scale_y = 0.2f;
-//    //int raw_img_y = 470;
-//    //int Pheight = raw_img_y * scale_y;
-//
-//    isOnGround = true;
-//    initialJumpSpeed = -700.0f; // The instant upward burst
-//
-//    if (!playerTex.loadFromFile("Sprites/Character.png")) {
-//        std::cout << "ERROR: Failed to load player texture!\n";
-//    }
-//    playerSprite.setTexture(playerTex);
-//    playerSprite.setScale(scale_x, scale_y);
-//
-//    playerHeight = playerTex.getSize().y * scale_y;
-//    playerWidth = playerTex.getSize().x * scale_x;
-//
-//    playerSprite.setPosition(player_x, player_y);
-//}
-////destroying pointers
-//PlayState::~PlayState() {
-//    for (int i = 0; i < height; i++) {
-//        delete[] lvl[i];
-//    }
-//    delete[] lvl;
-//}
-//
-//void PlayState::handleInput(sf::Event& event, sf::RenderWindow& window) {
-//    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
-//        window.close();
-//    }
-//}
-//
-//void PlayState::update(float dt) {
-//    // Horizontal Movement
-//    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-//        velocityX = max_speed;
-//    }
-//    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-//        velocityX = -max_speed;
-//    }
-//    else {
-//        velocityX = 0.0f;
-//    }
-//
-//    // Apply horizontal speed multiplied by delta time
-//    player_x += velocityX * dt;
-//
-//    // 2. Vertical Movement & Physics
-//    // Gravity is ALWAYS pulling you down, every single frame.
-//    velocityY += gravity * dt;
-//
-//    // Apply vertical speed multiplied by delta time
-//    player_y += velocityY * dt;
-//
-//    // 3. GENERIC TILE COLLISION (No getGlobalBounds allowed)
-//    // We manually calculate the feet and sides using our tracked variables
-//    // 1. Guilty until proven grounded. ALWAYS reset this at the top.
-//    //isOnGround = false;
-//
-//    // 2. Add an epsilon (+1.0f) to look exactly 1 pixel under the feet to dodge floating point errors.
-//    // Inset the X coordinates by 5 pixels so you actually fall when walking off ledges.
-//    float feetY = player_y + playerHeight + 1.0f;
-//    float leftFootX = player_x + 2.0f;
-//    float rightFootX = player_x + playerWidth - 2.0f;
-//
-//    // Translate pixel coordinates into 2D Array Indices safely
-//    int rowBlock = static_cast<int>(feetY / cell_size);
-//    int leftFootBlock = static_cast<int>(leftFootX / cell_size);
-//    int rightFootBlock = static_cast<int>(rightFootX / cell_size);
-//
-//    // SAFETY FIRST: Array bounds checking to prevent segfaults
-//    if (rowBlock >= 0 && rowBlock < height &&
-//        leftFootBlock >= 0 && leftFootBlock < width &&
-//        rightFootBlock >= 0 && rightFootBlock < width)
-//    {
-//        // Check the block under the left foot OR the right foot
-//        if (lvl[rowBlock][leftFootBlock] == 'g' || lvl[rowBlock][rightFootBlock] == 'g') {
-//
-//            // Only snap if falling downward. Gravity is always pulling > 0 when falling.
-//            if (velocityY > 0.0f) {
-//                // Snap the player so their feet rest exactly on the top edge
-//                player_y = (rowBlock * cell_size) - playerHeight;
-//                velocityY = 0.0f; // Kill the downward momentum dead
-//                isOnGround = true; // Safe!
-//            }
-//        }
-//        else {
-//            isOnGround = false;
-//        }
-//    }
-//
-//    // 4. The Jump Trigger
-//    // You can ONLY jump if you are currently touching the ground
-//    if (isOnGround && sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-//        velocityY = initialJumpSpeed; // Apply instant negative (upward) speed
-//        isOnGround = false;
-//    }
-//
-//    // Update the visual sprite with the new math
-//    playerSprite.setPosition(player_x, player_y);
-//}
-//
-//void PlayState::render(sf::RenderWindow& window) {
-//    // Note: window.clear() and window.display() are called by the Game loop, NOT here.
-//
-//    //render the level map first
-//    for (int i = 0; i < height; i++) {
-//        for (int j = 0; j < width; j++) {
-//            if (lvl[i][j] == 'g') {
-//                wallSprite1.setPosition(j * cell_size, i * cell_size);
-//                window.draw(wallSprite1);
-//            }
-//        }
-//    }
-//
-//    //render the player on top
-//    window.draw(playerSprite);
-//}
 #include "PlayState.h"
 
 PlayState::PlayState()
@@ -189,12 +29,9 @@ PlayState::PlayState()
 
 PlayState::~PlayState()
 {
-    // EntityManager destructor deletes all entities including player.
-    // Delete manager before level so entities can't reference a freed level
-    // during their own destructors (not an issue currently but good habit).
     delete entities;
     entities = nullptr;
-    player = nullptr; // dangling pointer guard - manager already freed it
+    player = nullptr; // dangling pointer guard (Entity manager will delete player)
 
     delete level;
     level = nullptr;
@@ -202,38 +39,44 @@ PlayState::~PlayState()
 
 void PlayState::handleInput(sf::Event& event, sf::RenderWindow& window)
 {
-    // Per academic constraints: no event.key.code.
-    // Escape is handled via event.type only, checking scancode instead.
     if (event.type == sf::Event::KeyPressed) {
         if (event.key.scancode == sf::Keyboard::Scan::Escape) {
             window.close();
         }
     }
-    // Continuous player input (movement, jump) is polled inside
-    // Player::handleInput() which runs every update() tick via isKeyPressed.
-    // No need to route it through the event queue here.
 }
 
 void PlayState::update(float dt)
 {
-    // Cap dt so a lag spike doesn't teleport entities through walls.
-    // At 30fps minimum, dt never exceeds ~33ms. Physics stays stable.
-    if (dt > 1.0f / 30.0f) dt = 1.0f / 30.0f;
+    // Clamping dt at a max value of 0.0333 so that if fps drop enourmously, dt doesn't get too much and the 
+    // player doesn't start to teleport
+    if (dt > 1.0f / 30.0f) 
+        dt = 1.0f / 30.0f;
 
     entities->updateAll(dt);
-    entities->removeDead(); // sweep dead entities at END of update, never mid-loop
+    entities->removeDead();
 
     // After removeDead(), check if player got cleaned up (died, fell out of world, etc.)
     // If player is gone, don't crash trying to follow it with the camera.
     if (player != nullptr && !player->getIsActive()) {
-        player = nullptr; // manager already freed it, just null our reference
+        player = nullptr; // means manager already freed it, we make it point nothing
     }
 
-    // Camera follows the player (dead-zone style, same logic as before)
+    // Clamping the player to the left boundary of the screen and right boundary of the world
+    if (player != nullptr) {
+        if (player->getPosX() < cameraX) {
+            player->setPosition(cameraX, player->getPosY());
+            player->setVelocity(0.0f, player->getVelocityY());
+        }
+        if (player->getPosX() + player->getEntityWidth() > cameraX + 1600.0f) {
+            player->setPosition(cameraX + 1600.0f - player->getEntityWidth(), player->getPosY());
+            player->setVelocity(0.0f, player->getVelocityY());
+        }
+    }
+
     if (player != nullptr) {
         float playerScreenX = player->getPosX() - cameraX; // This tells the player's position on the screen rn
-        //float leftThreshold = 1600.0f / 3.0f;
-        float rightThreshold = 1600.0f - (1600.0f / 3); //2.0f * 1600.0f / 3.5f; // Background only moves when player enters the 3rd 1/3 of the screen.
+        float rightThreshold = 1600.0f - (1600.0f / 3); // Background only moves when player enters the 3rd 1/3 of the screen.
 
         if (playerScreenX > rightThreshold) {
         cameraX = player->getPosX() - rightThreshold;

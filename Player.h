@@ -1,22 +1,20 @@
 #pragma once
 #include "Soldier.h"
 
-// Player just translates keyboard state into Soldier intents.
-// All physics/collision lives in Soldier. Keep this file dumb.
+// Player class has some extra specialized features that in soldier class
+// so it only handles inputs for the player and sets its sprite, rest of the
+// mechanics are calculated inside Soldier class
 
 class Player : public Soldier
 {
 private:
-    bool jumpHeldLastFrame;  // edge detection: prevents holding Space = infinite bunny hop
-
+    bool jumpHeldLastFrame; // This is to prevent infinite jumping logic if jump key is held continuosly
 public:
+// CONSTRUCTOR
     Player(float x, float y, const Level* lvl);
+// DESTRUCTOR
     virtual ~Player();
-
-    // Call this BEFORE update() in the game loop so intent is set first.
+// FUNCTIONS
     void handleInput();
-
-    // Override update to slot handleInput in automatically,
-    // so PlayState doesn't have to call two separate functions.
-    virtual void update(float dt) override;
+    virtual void update(float dt) override; // It calls soldier update inside it
 };

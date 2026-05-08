@@ -2,10 +2,10 @@
 #include "PlayState.h"
 
 Game::Game() : window(sf::VideoMode(1600, 900), "METAL SLUG", sf::Style::Close) {
-    window.setFramerateLimit(60); // Upper cap forr frames (max fps that we can get are 60, not more than this)
+    window.setFramerateLimit(60); // Upper cap for frames (max fps that we can get are 60, not more than this)
     window.setVerticalSyncEnabled(true);
 
-    // Boot up the first state
+    // Starting a state
     stateManager.pushState(new PlayState());
 }
 
@@ -17,7 +17,6 @@ void Game::run() {
 
         GameState* currentState = stateManager.getCurrentState();
 
-        //Handle Events (Single triggers like closing the window)
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
@@ -28,12 +27,10 @@ void Game::run() {
             }
         }
 
-        // 2. Update Logic (Movement, Physics, etc.)
         if (currentState) {
             currentState->update(dt);
         }
 
-        // 3. Render
         window.clear();
         if (currentState) {
             currentState->render(window);
