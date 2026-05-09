@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+class Player; // forward declaration for onPlayerRespawn
 class Entity
 {
 protected:
@@ -32,5 +33,14 @@ public:
     void deactivateEntity();
 // OTHER FUNCTIONS
     bool isOverlapping(const Entity* other) const;
+
+    // Called by a Projectile when it overlaps this entity.
+    // Returns true if the hit was accepted (projectile should deactivate).
+    // Base class ignores all hits — subclasses opt in by overriding.
+    virtual bool receiveProjectileHit(int damage, bool fromPlayer) { return false; }
+
+    // Called on every entity when the player respawns so AI can retarget.
+    // Base class no-op — Enemy overrides to update its player pointer.
+    virtual void onPlayerRespawn(Player* newPlayer) {}
 };
 

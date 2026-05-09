@@ -1,4 +1,5 @@
 #include "BallisticProjectile.h"
+#include "EntityManager.h"
 
 static constexpr float RADIUS = 7.0f;
 
@@ -7,12 +8,13 @@ BallisticProjectile::BallisticProjectile(float x, float y,
                                           int   damage,
                                           bool  fromPlayer,
                                           const Level* lvl,
+                                          EntityManager* em,
                                           sf::Color color)
-    : Projectile(x - RADIUS,          // centre the spawn point
+    : Projectile(x - RADIUS,
                  y - RADIUS,
                  RADIUS * 2.0f, RADIUS * 2.0f,
-                 damage, fromPlayer, lvl),
-      gravity(900.0f),        // gentler than player gravity for easier aiming
+                 damage, fromPlayer, lvl, em),
+      gravity(900.0f),
       maxFallSpeed(1000.0f)
 {
     velocityX = vx;
@@ -28,7 +30,6 @@ void BallisticProjectile::update(float dt)
 {
     if (!isActive) return;
 
-    // Apply gravity.
     velocityY += gravity * dt;
     if (velocityY > maxFallSpeed) velocityY = maxFallSpeed;
 
@@ -43,17 +44,19 @@ void BallisticProjectile::update(float dt)
         return;
     }
 
-    // ── Ground / wall contact → explode (deactivate) ─────────────────────────
+    // ── Entity collision (pure virtual dispatch — no dynamic_cast) ───────────
+    checkEntityCollisions();
+    if (!isActive) return; // hit something — skip tile check
+
+    // ── Ground / wall contact → deactivate ──────────────────────────────────
     float centerX = positionX + RADIUS;
     float centerY = positionY + RADIUS;
     float bottomY = positionY + RADIUS * 2.0f;
 
-    // Check bottom-centre, left-mid, right-mid
     if (level->isSolidAtPixel(centerX, bottomY) ||
-        level->isSolidAtPixel(positionX,            centerY) ||
+        level->isSolidAtPixel(positionX,              centerY) ||
         level->isSolidAtPixel(positionX + RADIUS * 2.0f, centerY)) {
         deactivateEntity();
-        // TODO: trigger area-damage explosion here (Phase 2 feature)
     }
 }
 

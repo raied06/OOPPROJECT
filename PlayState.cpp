@@ -64,11 +64,10 @@ void PlayState::update(float dt)
     if (dt > 1.0f / 30.0f)
         dt = 1.0f / 30.0f;
 
+    // updateAll calls each projectile's update(), which internally calls
+    // checkEntityCollisions() via virtual dispatch — no explicit collision
+    // step needed here anymore.
     entities->updateAll(dt);
-
-    // Projectile vs entity collision — runs AFTER all entities have moved
-    // this frame but BEFORE removeDead() so takeDamage() is still safe to call.
-    checkProjectileCollisions();
 
     // Check player death BEFORE removeDead() frees the memory — after that the
     // pointer is dangling and getIsActive() would be undefined behaviour.
@@ -153,12 +152,13 @@ void PlayState::respawnPlayer()
     player = new Player(spawnX, spawnY, level, entities);
     entities->add(player);
 
-    // Update every living enemy so their AI target points to the new player.
+    // Update every living entity so enemies retarget the new player.
+    // Uses virtual dispatch — setNewPlayerTarget() is a no-op on non-enemies.
     int n = entities->getCount();
     for (int i = 0; i < n; i++) {
-        Enemy* e = dynamic_cast<Enemy*>(entities->getEntity(i));
+        Entity* e = entities->getEntity(i);
         if (e && e->getIsActive())
-            e->setPlayer(player);
+            e->onPlayerRespawn(player);
     }
 
     // Snap camera so the player appears in the left third of the screen.
@@ -166,42 +166,6 @@ void PlayState::respawnPlayer()
     if (cameraX < 0.0f) cameraX = 0.0f;
     respawnTimer = -1.0f;
     std::cout << "Player respawned. Lives left: " << lives << "\n";
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Projectile collision detection
-// ─────────────────────────────────────────────────────────────────────────────
-
-void PlayState::checkProjectileCollisions()
-{
-    int n = entities->getCount();
-
-    for (int i = 0; i < n; i++) {
-        Projectile* proj = dynamic_cast<Projectile*>(entities->getEntity(i));
-        if (!proj || !proj->getIsActive()) continue;
-
-        if (proj->isFromPlayer()) {
-            // Player bullet → check against all enemies
-            for (int j = 0; j < n; j++) {
-                if (i == j) continue;
-                Enemy* enemy = dynamic_cast<Enemy*>(entities->getEntity(j));
-                if (!enemy || !enemy->getIsActive()) continue;
-
-                if (proj->isOverlapping(enemy)) {
-                    enemy->takeDamage(proj->getDamage());
-                    proj->deactivateEntity();
-                    break; // one bullet hits one enemy
-                }
-            }
-        }
-        else {
-            // Enemy bullet → check against the player
-            if (player && player->getIsActive() && proj->isOverlapping(player)) {
-                player->takeDamage(proj->getDamage());
-                proj->deactivateEntity();
-            }
-        }
-    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -37,13 +37,12 @@ void ProjectileWeapon::fire(float x, float y,
     float vx = facingRight ? projectileSpeed : -projectileSpeed;
 
     if (gravityAffected) {
-        // Launch at ~45° upward arc so the grenade/rocket clears typical cover.
         float vy = -projectileSpeed * 0.5f;
-        em.add(new BallisticProjectile(x, y, vx, vy, damage, fromPlayer, level, projectileColor));
+        em.add(new BallisticProjectile(x, y, vx, vy, damage, fromPlayer, level, &em, projectileColor));
     }
     else {
-        float vy = 0.0f; // horizontal shot; mouse-aim angle added in a later feature pass
-        em.add(new StraightProjectile(x, y, vx, vy, damage, fromPlayer, level, projectileColor));
+        float vy = 0.0f;
+        em.add(new StraightProjectile(x, y, vx, vy, damage, fromPlayer, level, &em, projectileColor));
     }
 
     // Consume ammo (infinite stays at -1).

@@ -89,6 +89,14 @@ public:
     virtual void update(float dt) override;
     virtual void render(sf::RenderWindow& window, float cameraX, float cameraY) override;
 
+    // Accepts hits from player projectiles only.
+    virtual bool receiveProjectileHit(int damage, bool fromPlayer) override
+    {
+        if (!fromPlayer) return false;
+        takeDamage(damage);
+        return true;
+    }
+
     // ── Called by AI states ──────────────────────────────────────────────────
     void moveLeft();
     void moveRight();
@@ -102,5 +110,6 @@ public:
     float   getAttackRange()      const { return attackRange; }
     bool    isOnGround()          const { return onGround; }
     Player* getPlayer()           const { return player; }
-    void    setPlayer(Player* p)        { player = p; }  // called on player respawn
+    // Retargets AI to the newly spawned player — no dynamic_cast needed.
+    virtual void onPlayerRespawn(Player* newPlayer) override { player = newPlayer; }
 };

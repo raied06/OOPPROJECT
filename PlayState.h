@@ -2,8 +2,6 @@
 #include "GameState.h"
 #include "Level.h"
 #include "Player.h"
-#include "Enemy.h"
-#include "Projectile.h"
 #include "RebelSoldier.h"
 #include "ShieldedSoldier.h"
 #include "BazookaSoldier.h"
@@ -36,10 +34,6 @@ private:
     float respawnTimer;       // counts down after death; player respawns when it hits 0
     float spawnX, spawnY;     // fixed respawn position
     static constexpr float RESPAWN_DELAY = 2.0f; // seconds between death and respawn
-
-    // Checks every active Projectile against valid targets each frame.
-    // Player bullets → enemies; enemy bullets → player.
-    void checkProjectileCollisions();
 
     // Re-creates the player entity and resets the camera to the spawn point.
     void respawnPlayer();

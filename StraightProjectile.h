@@ -23,6 +23,7 @@ public:
                        int   damage,
                        bool  fromPlayer,
                        const Level* lvl,
+                       EntityManager* em,
                        sf::Color color = sf::Color::Yellow);
 
     void update(float dt) override;

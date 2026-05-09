@@ -1,4 +1,5 @@
 #include "StraightProjectile.h"
+#include "EntityManager.h"
 
 static constexpr float BULLET_W = 14.0f;
 static constexpr float BULLET_H =  4.0f;
@@ -8,11 +9,12 @@ StraightProjectile::StraightProjectile(float x, float y,
                                         int   damage,
                                         bool  fromPlayer,
                                         const Level* lvl,
+                                        EntityManager* em,
                                         sf::Color color)
-    : Projectile(x - BULLET_W * 0.5f,   // centre the spawn point
+    : Projectile(x - BULLET_W * 0.5f,
                  y - BULLET_H * 0.5f,
                  BULLET_W, BULLET_H,
-                 damage, fromPlayer, lvl)
+                 damage, fromPlayer, lvl, em)
 {
     velocityX = vx;
     velocityY = vy;
@@ -39,13 +41,16 @@ void StraightProjectile::update(float dt)
     }
 
     // ── Tile collision ───────────────────────────────────────────────────────
-    // Check the leading edge based on travel direction.
     float checkX = (velocityX >= 0.0f) ? positionX + BULLET_W : positionX;
-    float checkY = positionY + BULLET_H * 0.5f; // mid-height
+    float checkY = positionY + BULLET_H * 0.5f;
 
     if (level->isSolidAtPixel(checkX, checkY)) {
         deactivateEntity();
+        return;
     }
+
+    // ── Entity collision (pure virtual dispatch — no dynamic_cast) ───────────
+    checkEntityCollisions();
 }
 
 void StraightProjectile::render(sf::RenderWindow& window, float cameraX, float cameraY)

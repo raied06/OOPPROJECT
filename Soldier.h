@@ -45,4 +45,12 @@ public:
     void setBaseScale(float x, float y);
 
     bool isOnGround() const { return onGround; }
+
+    // Accepts hits from enemy projectiles only.
+    virtual bool receiveProjectileHit(int damage, bool fromPlayer) override
+    {
+        if (fromPlayer) return false; // friendly fire — ignore
+        takeDamage(damage);
+        return true;
+    }
 };

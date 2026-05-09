@@ -25,6 +25,7 @@ public:
                         int   damage,
                         bool  fromPlayer,
                         const Level* lvl,
+                        EntityManager* em,
                         sf::Color color = sf::Color(210, 105, 30)); // chocolate-brown
 
     void update(float dt) override;
