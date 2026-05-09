@@ -167,7 +167,10 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     <ClInclude Include="GameState.h" />
     <ClInclude Include="GameStateManager.h" />
     <ClInclude Include="GrenadeSoldier.h" />
+    <ClInclude Include="Martian.h" />
+    <ClInclude Include="MummyWarrior.h" />
     <ClInclude Include="Level.h" />
+    <ClInclude Include="Paratrooper.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayState.h" />
     <ClInclude Include="Projectile.h" />
@@ -177,6 +180,7 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     <ClInclude Include="Soldier.h" />
     <ClInclude Include="StraightProjectile.h" />
     <ClInclude Include="Weapon.h" />
+    <ClInclude Include="Zombie.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BallisticProjectile.cpp" />
@@ -189,8 +193,11 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameStateManager.cpp" />
     <ClCompile Include="GrenadeSoldier.cpp" />
+    <ClCompile Include="Martian.cpp" />
+    <ClCompile Include="MummyWarrior.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Paratrooper.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PlayState.cpp" />
     <ClCompile Include="Projectile.cpp" />
@@ -200,6 +207,7 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     <ClCompile Include="Soldier.cpp" />
     <ClCompile Include="StraightProjectile.cpp" />
     <ClCompile Include="Weapon.cpp" />
+    <ClCompile Include="Zombie.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

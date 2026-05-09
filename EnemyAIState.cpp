@@ -110,3 +110,66 @@ EnemyAIState* AttackState::update(Enemy& enemy, float dt)
 }
 
 void AttackState::exit(Enemy& /*enemy*/) {}
+
+
+// ═════════════════════════════════════════════════════════════════════════════
+// ParachuteState
+// ═════════════════════════════════════════════════════════════════════════════
+
+void ParachuteState::enter(Enemy& enemy)
+{
+    enemy.stopMoving();
+}
+
+EnemyAIState* ParachuteState::update(Enemy& enemy, float dt)
+{
+    // Just wait until gravity (already reduced by Paratrooper) brings us down.
+    if (enemy.isOnGround())
+        return new PatrolState();
+
+    return nullptr;
+}
+
+void ParachuteState::exit(Enemy& /*enemy*/) {}
+
+
+// ═════════════════════════════════════════════════════════════════════════════
+// MartianFlyState
+// ═════════════════════════════════════════════════════════════════════════════
+
+MartianFlyState::MartianFlyState(float duration)
+    : flyTimer(duration), flyDuration(duration), descending(false)
+{}
+
+void MartianFlyState::enter(Enemy& enemy)
+{
+    flyTimer   = flyDuration;
+    descending = false;
+}
+
+EnemyAIState* MartianFlyState::update(Enemy& enemy, float dt)
+{
+    flyTimer -= dt;
+
+    if (!descending) {
+        // Hover phase: drift slowly toward player X position.
+        enemy.moveTowardPlayer();
+
+        if (flyTimer <= 0.0f)
+            descending = true;
+    }
+    else {
+        // Descent phase: stop horizontal movement, let gravity pull it down.
+        enemy.stopMoving();
+
+        if (enemy.isOnGround())
+            return new AttackState(1.5f); // land → shoot energy beams
+    }
+
+    return nullptr;
+}
+
+void MartianFlyState::exit(Enemy& enemy)
+{
+    enemy.stopMoving();
+}

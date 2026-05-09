@@ -78,6 +78,13 @@ bool Enemy::tryLoadTexture(const char* path, float targetH)
     return true;
 }
 
+bool Enemy::receiveProjectileHit(int damage, bool fromPlayer)
+{
+    if (!fromPlayer) return false; // enemy bullets don't hurt other enemies
+    takeDamage(damage);
+    return true;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // AI state helpers
 // ─────────────────────────────────────────────────────────────────────────────

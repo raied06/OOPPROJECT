@@ -69,6 +69,43 @@ public:
 
 
 // ═════════════════════════════════════════════════════════════════════════════
+// ParachuteState  —  used by Paratrooper while descending
+// ═════════════════════════════════════════════════════════════════════════════
+// Gravity is already reduced on the Paratrooper itself. This state just waits
+// until the enemy touches the ground, then hands off to PatrolState.
+// ─────────────────────────────────────────────────────────────────────────────
+class ParachuteState : public EnemyAIState
+{
+public:
+    void           enter(Enemy& enemy) override;
+    EnemyAIState*  update(Enemy& enemy, float dt) override;
+    void           exit(Enemy& enemy) override;
+};
+
+
+// ═════════════════════════════════════════════════════════════════════════════
+// MartianFlyState  —  Phase 1 of the Martian (pod flying toward player)
+// ═════════════════════════════════════════════════════════════════════════════
+// Martian hovers at a fixed height and drifts horizontally toward the player.
+// After flyDuration seconds (or when close enough) it descends to the ground
+// and transitions to AttackState for its energy-beam phase.
+// ─────────────────────────────────────────────────────────────────────────────
+class MartianFlyState : public EnemyAIState
+{
+    float flyTimer;       // counts down; when 0 → descend
+    float flyDuration;
+    bool  descending;
+
+public:
+    explicit MartianFlyState(float duration = 4.0f);
+
+    void           enter(Enemy& enemy) override;
+    EnemyAIState*  update(Enemy& enemy, float dt) override;
+    void           exit(Enemy& enemy) override;
+};
+
+
+// ═════════════════════════════════════════════════════════════════════════════
 // AttackState
 // ═════════════════════════════════════════════════════════════════════════════
 // The enemy stops moving and fires continuously on a cooldown while the player

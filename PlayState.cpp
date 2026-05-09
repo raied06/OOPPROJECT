@@ -22,12 +22,14 @@ PlayState::PlayState()
     entities->add(player); // manager owns it now
 
     // ── Spawn initial enemy batches ──────────────────────────────────────────
-    spawnRebelBatch   ( 800.0f, 200.0f, 3);
-    spawnShieldedBatch(1600.0f, 200.0f, 2);
-    spawnRebelBatch   (2200.0f, 200.0f, 2);
-    spawnBazookaBatch (3000.0f, 200.0f, 2);
-    spawnGrenadeBatch (3800.0f, 200.0f, 2);
-    spawnRebelBatch   (4600.0f, 200.0f, 4);
+    spawnRebelBatch      ( 800.0f, 200.0f, 3);
+    spawnShieldedBatch   (1600.0f, 200.0f, 2);
+    spawnBazookaBatch    (2400.0f, 200.0f, 2);
+    spawnGrenadeBatch    (3200.0f, 200.0f, 2);
+    spawnZombieBatch     (4000.0f, 200.0f, 4);
+    spawnMummyBatch      (4800.0f, 200.0f, 2);
+    spawnMartianBatch    (5600.0f, 100.0f, 2); // spawns high — flying phase
+    spawnParatrooperBatch(6400.0f,   0.0f, 3); // spawns at top of screen
 
     if (!bgTex.loadFromFile("Sprites/Background.png")) {
         std::cout << "ERROR: background texture failed\n";
@@ -198,4 +200,32 @@ void PlayState::spawnGrenadeBatch(float x, float y, int count)
     static constexpr float SPACING = 100.0f;
     for (int i = 0; i < count; i++)
         entities->add(new GrenadeSoldier(x + i * SPACING, y, level, player, entities));
+}
+
+void PlayState::spawnParatrooperBatch(float x, float y, int count)
+{
+    static constexpr float SPACING = 120.0f;
+    for (int i = 0; i < count; i++)
+        entities->add(new Paratrooper(x + i * SPACING, y, level, player, entities));
+}
+
+void PlayState::spawnZombieBatch(float x, float y, int count)
+{
+    static constexpr float SPACING = 90.0f;
+    for (int i = 0; i < count; i++)
+        entities->add(new Zombie(x + i * SPACING, y, level, player, entities));
+}
+
+void PlayState::spawnMummyBatch(float x, float y, int count)
+{
+    static constexpr float SPACING = 100.0f;
+    for (int i = 0; i < count; i++)
+        entities->add(new MummyWarrior(x + i * SPACING, y, level, player, entities));
+}
+
+void PlayState::spawnMartianBatch(float x, float y, int count)
+{
+    static constexpr float SPACING = 200.0f; // martians need wide spacing (flying phase)
+    for (int i = 0; i < count; i++)
+        entities->add(new Martian(x + i * SPACING, y, level, player, entities));
 }

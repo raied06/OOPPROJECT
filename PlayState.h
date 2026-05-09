@@ -6,6 +6,10 @@
 #include "ShieldedSoldier.h"
 #include "BazookaSoldier.h"
 #include "GrenadeSoldier.h"
+#include "Paratrooper.h"
+#include "Zombie.h"
+#include "MummyWarrior.h"
+#include "Martian.h"
 #include "EntityManager.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -39,10 +43,14 @@ private:
     void respawnPlayer();
 
     // Spawns 'count' of the specified enemy type spaced 80px apart.
-    void spawnRebelBatch   (float x, float y, int count);
-    void spawnShieldedBatch(float x, float y, int count);
-    void spawnBazookaBatch (float x, float y, int count);
-    void spawnGrenadeBatch (float x, float y, int count);
+    void spawnRebelBatch      (float x, float y, int count);
+    void spawnShieldedBatch   (float x, float y, int count);
+    void spawnBazookaBatch    (float x, float y, int count);
+    void spawnGrenadeBatch    (float x, float y, int count);
+    void spawnParatrooperBatch(float x, float y, int count); // drops from sky
+    void spawnZombieBatch     (float x, float y, int count);
+    void spawnMummyBatch      (float x, float y, int count);
+    void spawnMartianBatch    (float x, float y, int count);
 
 public:
     PlayState();
