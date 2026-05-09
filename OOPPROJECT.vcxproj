@@ -156,26 +156,50 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BallisticProjectile.h" />
+    <ClInclude Include="BazookaSoldier.h" />
+    <ClInclude Include="DamageableEntity.h" />
+    <ClInclude Include="Enemy.h" />
+    <ClInclude Include="EnemyAIState.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="Entitymanager.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameState.h" />
     <ClInclude Include="GameStateManager.h" />
+    <ClInclude Include="GrenadeSoldier.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayState.h" />
+    <ClInclude Include="Projectile.h" />
+    <ClInclude Include="ProjectileWeapon.h" />
+    <ClInclude Include="RebelSoldier.h" />
+    <ClInclude Include="ShieldedSoldier.h" />
     <ClInclude Include="Soldier.h" />
+    <ClInclude Include="StraightProjectile.h" />
+    <ClInclude Include="Weapon.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BallisticProjectile.cpp" />
+    <ClCompile Include="BazookaSoldier.cpp" />
+    <ClCompile Include="DamageableEntity.cpp" />
+    <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="EnemyAIState.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="Entitymanager.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameStateManager.cpp" />
+    <ClCompile Include="GrenadeSoldier.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PlayState.cpp" />
+    <ClCompile Include="Projectile.cpp" />
+    <ClCompile Include="ProjectileWeapon.cpp" />
+    <ClCompile Include="RebelSoldier.cpp" />
+    <ClCompile Include="ShieldedSoldier.cpp" />
     <ClCompile Include="Soldier.cpp" />
-    <ClCompile Include="GameStateManager.cpp" />
+    <ClCompile Include="StraightProjectile.cpp" />
+    <ClCompile Include="Weapon.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

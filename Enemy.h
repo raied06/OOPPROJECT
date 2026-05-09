@@ -102,4 +102,5 @@ public:
     float   getAttackRange()      const { return attackRange; }
     bool    isOnGround()          const { return onGround; }
     Player* getPlayer()           const { return player; }
+    void    setPlayer(Player* p)        { player = p; }  // called on player respawn
 };

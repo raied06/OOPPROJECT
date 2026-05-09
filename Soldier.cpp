@@ -1,8 +1,8 @@
 #include "Soldier.h"
 #include <iostream>
 
-Soldier::Soldier(float x, float y, float w, float h, const Level* lvl)
-    : Entity(x, y, w, h),
+Soldier::Soldier(float x, float y, float w, float h, int hp, const Level* lvl)
+    : DamageableEntity(x, y, w, h, hp),
     level(lvl),
     onGround(false),
     facingRight(true),
@@ -136,11 +136,22 @@ void Soldier::update(float dt)
    And if ground isn't detected, onGround is false and player isn't snapped back onto the ground, so when render function
    is called, it moves player into the ground."*/
 
+    // Tick invincibility flash timer (DamageableEntity)
+    updateDamageTimers(dt);
+
     velocityY += gravity * dt;
     if (velocityY > maxFallSpeed) velocityY = maxFallSpeed;
 
     // Applying Horizontal Movement
     positionX += velocityX * dt;
+
+    // Clamp to left world edge before resolveVertical so negative positionX
+    // doesn't produce wrong column indices and cause phantom ground detection.
+    if (positionX < 0.0f) {
+        positionX = 0.0f;
+        if (velocityX < 0.0f) velocityX = 0.0f;
+    }
+
     resolveHorizontal();
 
     // Applying Vertical Movement
@@ -151,6 +162,9 @@ void Soldier::update(float dt)
 void Soldier::render(sf::RenderWindow& window, float cameraX, float cameraY)
 {
     if (!isActive) return;
+
+    // Apply red flash during invincibility window (DamageableEntity)
+    applyDamageFlash(sprite);
 
     if (facingRight) {
         sprite.setScale(baseScaleX, baseScaleY);

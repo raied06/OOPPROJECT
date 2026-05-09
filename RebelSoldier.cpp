@@ -2,7 +2,7 @@
 #include "ProjectileWeapon.h"
 
 // ── Tuning constants ──────────────────────────────────────────────────────────
-static constexpr float REBEL_TARGET_H     = 80.0f;  // rendered height in pixels
+static constexpr float REBEL_TARGET_H     = 150.0f; // rendered height in pixels — matches player
 static constexpr int   REBEL_HP           = 2;
 static constexpr float REBEL_MOVE_SPEED   = 120.0f; // px / s
 static constexpr float REBEL_DETECT_RANGE = 450.0f; // px — patrol → chase

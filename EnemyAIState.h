@@ -71,21 +71,17 @@ public:
 // ═════════════════════════════════════════════════════════════════════════════
 // AttackState
 // ═════════════════════════════════════════════════════════════════════════════
-// The enemy stops moving and fires at the player on a cooldown.
-// After firing a burst it returns to ChaseState so it can reposition.
-// If the player somehow leaves attackRange it goes back to ChaseState early.
+// The enemy stops moving and fires continuously on a cooldown while the player
+// stays within attackRange. Transitions to ChaseState if the player escapes.
 // ─────────────────────────────────────────────────────────────────────────────
 class AttackState : public EnemyAIState
 {
     float attackCooldown;   // seconds between shots
     float cooldownTimer;    // counts DOWN to next shot
-    int   burstCount;       // how many shots fired in this visit
-    int   burstMax;         // shots before returning to ChaseState
 
 public:
     // attackCooldown: seconds between shots (default 1.2 s)
-    // burstMax:       shots before returning to chase (default 2)
-    AttackState(float attackCooldown = 1.2f, int burstMax = 2);
+    explicit AttackState(float attackCooldown = 1.2f, int /*unused*/ = 0);
 
     void           enter(Enemy& enemy) override;
     EnemyAIState*  update(Enemy& enemy, float dt) override;

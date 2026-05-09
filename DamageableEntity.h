@@ -38,7 +38,7 @@ public:
 
     // Applies damage unless the entity is currently invincible.
     // Triggers invincibility window; calls deactivateEntity() on death.
-    void takeDamage(int amount);
+    virtual void takeDamage(int amount);
 
     bool isInvincible() const { return invincibilityTimer > 0.0f; }
     int  getHP()        const { return currentHP; }

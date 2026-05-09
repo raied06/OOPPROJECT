@@ -77,37 +77,32 @@ void ChaseState::exit(Enemy& enemy)
 // AttackState
 // ═════════════════════════════════════════════════════════════════════════════
 
-AttackState::AttackState(float cooldown, int bMax)
+AttackState::AttackState(float cooldown, int /*bMax*/)
     : attackCooldown(cooldown),
-      cooldownTimer(0.0f),   // fire immediately on first enter
-      burstCount(0),
-      burstMax(bMax)
+      cooldownTimer(0.0f)   // fire immediately on first enter
 {}
 
 void AttackState::enter(Enemy& enemy)
 {
     enemy.stopMoving();
-    burstCount    = 0;
-    cooldownTimer = 0.0f; // shoot right away
+    cooldownTimer = 0.0f; // shoot right away on entry
 }
 
 EnemyAIState* AttackState::update(Enemy& enemy, float dt)
 {
     float dist = enemy.distanceToPlayer();
 
-    // ── Early exit: player ran away ──────────────────────────────────────────
+    // Player moved out of attack range — give chase again.
     if (dist > enemy.getAttackRange() * 1.5f)
         return new ChaseState();
 
-    // ── Burst complete: reposition ───────────────────────────────────────────
-    if (burstCount >= burstMax)
-        return new ChaseState();
+    // Stay stopped and face the player every frame.
+    enemy.stopMoving();
 
-    // ── Shoot on cooldown ────────────────────────────────────────────────────
+    // Fire on cooldown — indefinitely while player is in range.
     cooldownTimer -= dt;
     if (cooldownTimer <= 0.0f) {
         enemy.fireWeapon();
-        burstCount++;
         cooldownTimer = attackCooldown;
     }
 

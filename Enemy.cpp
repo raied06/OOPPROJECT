@@ -266,12 +266,13 @@ void Enemy::render(sf::RenderWindow& window, float cameraX, float cameraY)
     if (hasTexture) {
         applyDamageFlash(sprite);
 
-        if (facingRight) {
+        // Enemy sprites naturally face LEFT (opposite of the player sheet).
+        // So facingRight=true needs the horizontal flip, facingLeft=false does not.
+        if (!facingRight) {
             sprite.setScale( baseScaleX, baseScaleY);
             sprite.setPosition(screenX, screenY);
         }
         else {
-            // Mirror: shift right by width so hitbox stays aligned.
             sprite.setScale(-baseScaleX, baseScaleY);
             sprite.setPosition(screenX + entityWidth, screenY);
         }

@@ -1,11 +1,11 @@
 #pragma once
-#include "Entity.h"
+#include "DamageableEntity.h"
 #include "Level.h"
 
 // Soldier is anything that walks and obeys gravity base.
 // Player inherits from this. (Enemy grunts will too)
 
-class Soldier : public Entity
+class Soldier : public DamageableEntity
 {
 protected:
     const Level* level;  // not owned by Soldier, Level is owned by PlayState so will not be deleted here (aggregation)
@@ -30,7 +30,7 @@ protected:
     // Calculates the checks of vertical movement 
 
 public:
-    Soldier(float x, float y, float w, float h, const Level* lvl);
+    Soldier(float x, float y, float w, float h, int hp, const Level* lvl);
     virtual ~Soldier();
 
     virtual void update(float dt) override;
