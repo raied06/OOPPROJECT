@@ -2,12 +2,9 @@
 #include "Player.h"
 #include "EntityManager.h"
 #include "Weapon.h"
-#include <cmath>
+//#include <cmath>
 #include <iostream>
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Constructor / Destructor
-// ─────────────────────────────────────────────────────────────────────────────
 
 Enemy::Enemy(float x, float y, float targetH,
              int hp,
@@ -102,6 +99,26 @@ float Enemy::distanceToPlayer() const
     float dx = player->getPosX() - positionX;
     float dy = player->getPosY() - positionY;
     return std::sqrt(dx * dx + dy * dy);
+}
+
+float Enemy::getDetectionRange() const
+{
+    return detectionRange;
+}
+
+float Enemy::getAttackRange() const
+{
+    return attackRange;
+}
+
+bool Enemy::isOnGround() const
+{
+    return onGround;
+}
+
+Player* Enemy::getPlayer() const
+{
+    return player;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -307,4 +324,12 @@ void Enemy::render(sf::RenderWindow& window, float cameraX, float cameraY)
         arrow.setPosition(arrowX, screenY + entityHeight * 0.45f);
         window.draw(arrow);
     }
+}
+
+bool Enemy::receiveProjectileHit(int damage, bool fromPlayer)
+{
+    if (!fromPlayer)
+        return false;
+    takeDamage(damage);
+    return true;
 }

@@ -9,6 +9,7 @@ class Soldier : public DamageableEntity
 {
 protected:
     const Level* level;  // not owned by Soldier, Level is owned by PlayState so will not be deleted here (aggregation)
+                         // Used for collision checks
 
     bool  onGround; //Used to answer two things, 1.To check if jump is allowed or not, 2.Is player standing on the ground?
     bool  facingRight;

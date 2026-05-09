@@ -8,34 +8,26 @@
 class Player;
 class EntityManager;
 class Weapon;
+                                                    // ABSTRACT BASE CLASS for all Enemies
 
-// ═════════════════════════════════════════════════════════════════════════════
-// Enemy  —  abstract base for all enemy types
-// ═════════════════════════════════════════════════════════════════════════════
-// Inherits HP / damage flash from DamageableEntity.
-// Owns an EnemyAIState* (state-pattern AI) and a Weapon*.
-// Owns its own physics (gravity + tile collision) — separate from Soldier so
-// the two hierarchies stay independent per the UML.
-//
-// Concrete subclasses (RebelSoldier, etc.) call this constructor with their
-// specific sprite path, colour fallback, HP, and target height, then set their
-// own stats (moveSpeed, detectionRange, etc.) and hand in their weapon.
-// ─────────────────────────────────────────────────────────────────────────────
+/*  Inherits features from DamageableEntity like health points, color flickering etc.
+    EnemyAIState is owned by it (composition)
+    Weapons are owned by it (composition)
+    Has its own mechanics (physics implementation i.e., gravity, collision etc)
+    Child class will use it, pass their specific sprites to it and their own hp, dimensions etc. */
+
 class Enemy : public DamageableEntity
 {
 protected:
-    // ── Non-owning context pointers ──────────────────────────────────────────
-    const Level*   level;     // tilemap — for collision queries
-    Player*        player;    // AI target — for distance / direction
-    EntityManager* entities;  // entity pool — for spawning projectiles
+// NON-OWNED CONTEXT POINTERS
+    const Level* level; // Used to verify collisions
+    Player* player; // Used to decide motion of Enenmies towards player, their shooting
+    EntityManager* entities;  // Entity array to spawn projectiles
 
-    // ── AI ───────────────────────────────────────────────────────────────────
-    EnemyAIState* currentState; // OWNED — deleted on transition / destruction
+    EnemyAIState* currentState; // Composed here
+    Weapon* weapon; // Composed here
 
-    // ── Weapon ───────────────────────────────────────────────────────────────
-    Weapon* weapon; // OWNED — set by subclass constructor
-
-    // ── Visuals ──────────────────────────────────────────────────────────────
+// SPRITE (VISUALS)
     bool        hasTexture;
     sf::Texture texture;
     sf::Sprite  sprite;
@@ -45,15 +37,15 @@ protected:
     float baseScaleX;
     float baseScaleY;
 
-    // ── Physics ──────────────────────────────────────────────────────────────
+// MOVEMENT VARS (FOR PHYSICS IMPLEMENTATION)
     bool  onGround;
     float moveSpeed;
     float gravity;
     float maxFallSpeed;
 
-    // ── AI tuning (overrideable by subclasses) ───────────────────────────────
-    float detectionRange; // patrol → chase threshold (pixels)
-    float attackRange;    // chase  → attack threshold (pixels)
+// AI FEATURES
+    float detectionRange;
+    float attackRange;
 
     // ── Internal helpers ─────────────────────────────────────────────────────
     // Try to load a texture and compute hitbox width from it.
@@ -64,7 +56,7 @@ protected:
     void resolveHorizontal();
     void resolveVertical();
 
-    // Swap to a new AI state, calling exit() on the old and enter() on the new.
+    // Changing state to a new one (Patrol changed to chase etc)
     void transitionTo(EnemyAIState* newState);
 
 public:
@@ -73,43 +65,37 @@ public:
     // fallbackColor: the colour of that placeholder box
     Enemy(float x, float y, float targetH,
           int hp,
-          const char*  spritePath,
-          sf::Color    fallbackColor,
+          const char* spritePath,
+          sf::Color fallbackColor,
           const Level* lvl,
-          Player*      p,
+          Player* p,
           EntityManager* em);
 
     virtual ~Enemy();
 
-    // Non-copyable (owns raw pointers)
+// Cannot copy objects
     Enemy(const Enemy&)            = delete;
     Enemy& operator=(const Enemy&) = delete;
 
-    // ── Entity interface ─────────────────────────────────────────────────────
     virtual void update(float dt) override;
     virtual void render(sf::RenderWindow& window, float cameraX, float cameraY) override;
 
     // Accepts hits from player projectiles only.
-    virtual bool receiveProjectileHit(int damage, bool fromPlayer) override
-    {
-        if (!fromPlayer) return false;
-        takeDamage(damage);
-        return true;
-    }
+    virtual bool receiveProjectileHit(int damage, bool fromPlayer) override;
 
-    // ── Called by AI states ──────────────────────────────────────────────────
+    // Will be called by AI state
     void moveLeft();
     void moveRight();
     void moveTowardPlayer();
     void stopMoving();
     void fireWeapon();
 
-    // ── Queried by AI states ─────────────────────────────────────────────────
-    float   distanceToPlayer()    const;
-    float   getDetectionRange()   const { return detectionRange; }
-    float   getAttackRange()      const { return attackRange; }
-    bool    isOnGround()          const { return onGround; }
-    Player* getPlayer()           const { return player; }
-    // Retargets AI to the newly spawned player — no dynamic_cast needed.
+    float distanceToPlayer() const;
+// GETTERS
+    float getDetectionRange() const;
+    float getAttackRange() const;
+    bool isOnGround() const;
+    Player* getPlayer() const;
+// Retargets AI to the newly spawned player
     virtual void onPlayerRespawn(Player* newPlayer) override { player = newPlayer; }
 };

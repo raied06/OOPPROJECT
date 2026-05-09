@@ -1,28 +1,21 @@
 #pragma once
 #include "Entity.h"
 #include <SFML/Graphics.hpp>
+// ABSTRACT CLASS
 
-// Sits between Entity and everything that can be hurt:
-//   Soldier (and therefore Player), Enemy, Vehicle.
-//
-// Responsibilities:
-//   - HP tracking (currentHP / maxHP)
-//   - Invincibility window after a hit (1 second, per project spec)
-//   - Red-flash visual feedback during that window
-//
-// DamageableEntity is still abstract: update() and render() remain
-// pure virtual so concrete subclasses must implement them.
-
+// Anything that can be damaged is Damageable entity. Like, soldier, enemy and vehicles.
+// This class is used to track health (current hp, max hp), invincibility time after taking 
+// a hit, and shows the red flash when entity gets hit.
 class DamageableEntity : public Entity
 {
 protected:
     int   maxHP;
     int   currentHP;
-    float invincibilityTimer;   // counts DOWN from INVINCIBILITY_DURATION after a hit
-    float flashTimer;           // accumulates UP; used to produce the flicker phase
+    float invincibilityTimer;   // counts down from INVINCIBILITY_DURATION(1 sec) after a hit
+    float flashTimer;           // starts from 0 and counts up, (goes upto 1 sec max)
 
-    static constexpr float INVINCIBILITY_DURATION = 1.0f;  // seconds
-    static constexpr float FLASH_INTERVAL         = 0.08f; // flicker period (seconds)
+    static const float INVINCIBILITY_DURATION;  // seconds
+    static const float FLASH_INTERVAL; // flicker period (seconds)
 
     // ── Helpers for subclasses ────────────────────────────────────────────────
     // Call once per frame at the top of your update() to tick timers.
