@@ -44,6 +44,6 @@ public:
 
 	void render(sf::RenderWindow& window, float cameraX, float cameraY); // Only draws visible tiles
 
-	void buildTestMap(); // **DELETE IT LATER**
+	void fillColumn(int col, int surfaceRow); // fills grass/dirt/stone from surface down to row 20
+	void buildTestMap();
 };
-

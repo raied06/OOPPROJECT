@@ -1,40 +1,57 @@
 #pragma once
 #include "Soldier.h"
 
-class EntityManager; // forward declaration — full include in Player.cpp
-class Weapon;        // forward declaration
-
-// Player class has some extra specialized features that in soldier class
-// so it only handles inputs for the player and sets its sprite, rest of the
-// mechanics are calculated inside Soldier class
+class EntityManager;
+class Weapon;
 
 class Player : public Soldier
 {
 private:
-    bool jumpHeldLastFrame; // This is to prevent infinite jumping logic if jump key is held continuosly
-    bool fireHeldLastFrame; // Prevents holding mouse = bullet stream (one shot per click)
+    bool jumpHeldLastFrame;
+    bool fireHeldLastFrame;
+    bool knifeHeldLastFrame; // edge-detect for X key knife attack
 
-    Weapon*        weapon;   // OWNED — starts as Pistol, swappable on pickup
+    // ── Weapon slots ─────────────────────────────────────────────────────────
+    // 0 = Pistol   (always available)
+    // 1 = HMG      (dev mode)
+    // 2 = Rocket   (dev mode)
+    // 3 = Grenade  (dev mode)
+    // 4 = Knife    (dev mode — melee, instant-return after swing)
+    static constexpr int SLOT_COUNT = 5;
+    Weapon* weaponSlots[SLOT_COUNT]; // OWNED
+    int activeSlot;
+    int prevSlot; // slot to restore after a knife swing
+
+    // ── Developer mode ────────────────────────────────────────────────────────
+    bool devMode; // F1 toggles; grants immortality + all weapons
+
     EntityManager* entities; // non-owning — only used to spawn projectiles
 
+    // Creates weapon instances for slots 1-4 (called when dev mode is enabled).
+    void giveAllWeapons();
+
+    // Sets activeSlot; remembers previous slot so knife can return to it.
+    void equipSlot(int slot);
+
 public:
-// CONSTRUCTOR
-    // hp: starting health  |  em: shared entity pool (non-owning, must outlive Player)
     Player(float x, float y, const Level* lvl, EntityManager* em, int hp = 5);
-// DESTRUCTOR
     virtual ~Player();
 
-    // Non-copyable (owns weapon pointer)
     Player(const Player&)            = delete;
     Player& operator=(const Player&) = delete;
 
-// FUNCTIONS
     void handleInput();
-    virtual void update(float dt) override; // It calls soldier update inside it
+    virtual void update(float dt) override;
 
-    // Swap weapon on pickup — Player takes ownership of newWeapon
+    // Swap the pistol slot on pickup — Player takes ownership of newWeapon.
     void    equipWeapon(Weapon* newWeapon);
-    Weapon* getWeapon() const { return weapon; }
+    Weapon* getWeapon() const { return weaponSlots[activeSlot]; }
+
+    // Immortality — takeDamage is a no-op while devMode is on.
+    virtual void takeDamage(int amount) override;
+
+    void toggleDevMode();
+    bool isDevMode() const { return devMode; }
 
     virtual void applyScreenClamp(float cameraX) override;
 };

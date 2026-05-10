@@ -27,7 +27,9 @@ private:
     EntityManager* entities; // owns all entities including player
     Player* player;
 
-    sf::Texture bgTex;
+    sf::Texture bgTexPlain;
+    sf::Texture bgTexAerial;
+    sf::Texture bgTexAquatic;
     sf::Sprite  bgSprite;
 
     // Camera (Top left corner of visible screen)

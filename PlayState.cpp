@@ -10,7 +10,7 @@ PlayState::PlayState()
 
     // Creating world first, Player constructor needs a valid Level* to store, so
     // build the world. (Width = 200 tiles, Height = 14, cell = 64px)
-    level = new Level(200, 14, 64);
+    level = new Level(200, 22, 64);
     level->buildTestMap();
 
     entities = new EntityManager(64);
@@ -32,12 +32,15 @@ PlayState::PlayState()
     spawnMartianBatch    ( 9800.0f, 100.0f, 2);
     spawnParatrooperBatch(11200.0f,   0.0f, 3);
 
-    if (!bgTex.loadFromFile("Sprites/Background.png")) {
-        std::cout << "ERROR: background texture failed\n";
-    }
-    bgSprite.setTexture(bgTex);
+    if (!bgTexPlain.loadFromFile("Sprites/Plain_Biome.png"))
+        std::cout << "ERROR: Plain_Biome texture failed\n";
+    if (!bgTexAerial.loadFromFile("Sprites/Aerial_Biome.png"))
+        std::cout << "ERROR: Aerial_Biome texture failed\n";
+    if (!bgTexAquatic.loadFromFile("Sprites/Aquatic_Biome.png"))
+        std::cout << "ERROR: Aquatic_Biome texture failed\n";
 
-    float scaleY = 900.0f / bgTex.getSize().y;
+    bgSprite.setTexture(bgTexPlain);
+    float scaleY = 900.0f / bgTexPlain.getSize().y;
     bgSprite.setScale(scaleY, scaleY);
 }
 
@@ -104,33 +107,52 @@ void PlayState::update(float dt)
     }
 
     if (player != nullptr) {
-        float playerScreenX = player->getPosX() - cameraX; // This tells the player's position on the screen rn
-        float rightThreshold = 1600.0f - (1600.0f / 3); // Background only moves when player enters the 3rd 1/3 of the screen.
+        // ── Horizontal camera (right deadzone) ───────────────────────────────
+        float playerScreenX  = player->getPosX() - cameraX;
+        float rightThreshold = 1600.0f - (1600.0f / 3.0f);
+        if (playerScreenX > rightThreshold)
+            cameraX = player->getPosX() - rightThreshold;
 
-        if (playerScreenX > rightThreshold) {
-        cameraX = player->getPosX() - rightThreshold;
-        }
-     // else: player is in the first and middle third, camera does not move
-
-        // Clamping camera values
         if (cameraX < 0.0f) cameraX = 0.0f;
         float maxCamX = (float)(level->getWidthInPixels() - 1600);
         if (cameraX > maxCamX) cameraX = maxCamX;
+
+        // ── Vertical camera (top/bottom deadzone) ────────────────────────────
+        float playerScreenY   = player->getPosY() - cameraY;
+        float topThreshold    = 900.0f / 3.0f;
+        float bottomThreshold = 900.0f * 2.0f / 3.0f;
+
+        if (playerScreenY < topThreshold)
+            cameraY = player->getPosY() - topThreshold;
+        if (playerScreenY > bottomThreshold)
+            cameraY = player->getPosY() - bottomThreshold;
+
+        if (cameraY < 0.0f) cameraY = 0.0f;
+        float maxCamY = (float)(level->getHeightInPixels() - 900);
+        if (cameraY > maxCamY) cameraY = maxCamY;
     }
 }
 
 void PlayState::render(sf::RenderWindow& window)
 {
-    float bgWidth = (float)bgTex.getSize().x * bgSprite.getScale().x;
-    float bgScrollX = cameraX * 0.2f; // How far the background has scrolled (speed is 20% of player's speed)
-    // This gives us that how much pixels (starting from left of a panel) have passed and how much I have to display for thr first panel
-    // This logic basically loops the image in the background, four tiles of bg image run in a loop in background, instead of loading all
-    // background pixles with background every frame (to avoid lagging)
+    // Pick background based on which biome the camera is currently in.
+    // Plain: cols 0-66 (0 to 4288px), Aerial: cols 67-133 (4288-8576px), Aquatic: rest
+    float plainEnd  = 67.0f  * 64.0f;  // 4288px
+    float aerialEnd = 134.0f * 64.0f;  // 8576px
 
+    sf::Texture* activeBgTex;
+    if      (cameraX < plainEnd)  activeBgTex = &bgTexPlain;
+    else if (cameraX < aerialEnd) activeBgTex = &bgTexAerial;
+    else                          activeBgTex = &bgTexAquatic;
+
+    bgSprite.setTexture(*activeBgTex, false);
+    float scaleY = 900.0f / activeBgTex->getSize().y;
+    bgSprite.setScale(scaleY, scaleY);
+
+    float bgWidth     = (float)activeBgTex->getSize().x * scaleY;
+    float bgScrollX   = cameraX * 0.2f;
     float startOffset = bgScrollX - (int)(bgScrollX / bgWidth) * bgWidth;
-
-    // Finding that how many tiles of bg image do we need to run in a loop so that it seems to be never-ending
-    int numTiles = (int)(1600.0f / bgWidth) + 2;
+    int   numTiles    = (int)(1600.0f / bgWidth) + 2;
 
     for (int i = 0; i < numTiles; i++) {
         bgSprite.setPosition(i * bgWidth - startOffset, 0.0f);
@@ -147,12 +169,15 @@ void PlayState::render(sf::RenderWindow& window)
 
 void PlayState::respawnPlayer()
 {
-    // Create a fresh player at the spawn point and hand it to the manager.
-    player = new Player(spawnX, spawnY, level, entities);
+    // spawnX / spawnY are SCREEN offsets — convert to world coords using the
+    // current camera so the player always reappears within the visible area.
+    float worldX = cameraX + spawnX;
+    float worldY = cameraY + spawnY;
+
+    player = new Player(worldX, worldY, level, entities);
     entities->add(player);
 
     // Update every living entity so enemies retarget the new player.
-    // Uses virtual dispatch — setNewPlayerTarget() is a no-op on non-enemies.
     int n = entities->getCount();
     for (int i = 0; i < n; i++) {
         Entity* e = entities->getEntity(i);
@@ -160,11 +185,10 @@ void PlayState::respawnPlayer()
             e->onPlayerRespawn(player);
     }
 
-    // Snap camera so the player appears in the left third of the screen.
-    cameraX = spawnX - (1600.0f / 3.0f);
-    if (cameraX < 0.0f) cameraX = 0.0f;
+    // No camera snap needed — player spawned inside the current view.
     respawnTimer = -1.0f;
-    std::cout << "Player respawned. Lives left: " << lives << "\n";
+    std::cout << "Player respawned at screen (" << spawnX << ", " << spawnY
+              << "). Lives left: " << lives << "\n";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -173,56 +197,56 @@ void PlayState::respawnPlayer()
 
 void PlayState::spawnRebelBatch(float x, float y, int count)
 {
-    static constexpr float SPACING = 80.0f;
+    static constexpr float SPACING = 128.0f; // 2 blocks apart
     for (int i = 0; i < count; i++)
         entities->add(new RebelSoldier(x + i * SPACING, y, level, player, entities));
 }
 
 void PlayState::spawnShieldedBatch(float x, float y, int count)
 {
-    static constexpr float SPACING = 90.0f;
+    static constexpr float SPACING = 128.0f; // 2 blocks apart
     for (int i = 0; i < count; i++)
         entities->add(new ShieldedSoldier(x + i * SPACING, y, level, player, entities));
 }
 
 void PlayState::spawnBazookaBatch(float x, float y, int count)
 {
-    static constexpr float SPACING = 120.0f; // wider gap — rockets need room
+    static constexpr float SPACING = 192.0f; // 3 blocks apart — rockets need room
     for (int i = 0; i < count; i++)
         entities->add(new BazookaSoldier(x + i * SPACING, y, level, player, entities));
 }
 
 void PlayState::spawnGrenadeBatch(float x, float y, int count)
 {
-    static constexpr float SPACING = 100.0f;
+    static constexpr float SPACING = 128.0f; // 2 blocks apart
     for (int i = 0; i < count; i++)
         entities->add(new GrenadeSoldier(x + i * SPACING, y, level, player, entities));
 }
 
 void PlayState::spawnParatrooperBatch(float x, float y, int count)
 {
-    static constexpr float SPACING = 120.0f;
+    static constexpr float SPACING = 192.0f; // 3 blocks apart — parachutes need clearance
     for (int i = 0; i < count; i++)
         entities->add(new Paratrooper(x + i * SPACING, y, level, player, entities));
 }
 
 void PlayState::spawnZombieBatch(float x, float y, int count)
 {
-    static constexpr float SPACING = 90.0f;
+    static constexpr float SPACING = 128.0f; // 2 blocks apart
     for (int i = 0; i < count; i++)
         entities->add(new Zombie(x + i * SPACING, y, level, player, entities));
 }
 
 void PlayState::spawnMummyBatch(float x, float y, int count)
 {
-    static constexpr float SPACING = 100.0f;
+    static constexpr float SPACING = 128.0f; // 2 blocks apart
     for (int i = 0; i < count; i++)
         entities->add(new MummyWarrior(x + i * SPACING, y, level, player, entities));
 }
 
 void PlayState::spawnMartianBatch(float x, float y, int count)
 {
-    static constexpr float SPACING = 200.0f; // martians need wide spacing (flying phase)
+    static constexpr float SPACING = 256.0f; // 4 blocks apart — martians need wide spacing (flying phase)
     for (int i = 0; i < count; i++)
         entities->add(new Martian(x + i * SPACING, y, level, player, entities));
 }
