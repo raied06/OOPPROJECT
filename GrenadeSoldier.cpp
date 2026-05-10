@@ -21,8 +21,7 @@ GrenadeSoldier::GrenadeSoldier(float x, float y,
     : Enemy(x, y,
             GRENADE_TARGET_H,
             GRENADE_HP,
-            "Sprites/Enemies/grenade_soldier.png",
-            sf::Color(60, 120, 40),   // olive-green placeholder
+            "Sprites/Enemies/GrenadeSoldier.png",
             lvl, p, em)
 {
     moveSpeed      = GRENADE_MOVE_SPEED;

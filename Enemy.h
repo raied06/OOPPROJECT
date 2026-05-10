@@ -21,23 +21,21 @@ class Enemy : public DamageableEntity
 protected:
 // NON-OWNED CONTEXT POINTERS
     const Level* level; // Used to verify collisions
-    Player* player; // Used to decide motion of Enenmies towards player, their shooting
+    Player* player; // Used to track player (enemy's charge towards it)
     EntityManager* entities;  // Entity array to spawn projectiles
 
     EnemyAIState* currentState; // Composed here
     Weapon* weapon; // Composed here
 
 // SPRITE (VISUALS)
-    bool        hasTexture;
     sf::Texture texture;
     sf::Sprite  sprite;
-    sf::Color   placeholderColor; // drawn when no sprite is available
 
     bool  facingRight;
     float baseScaleX;
     float baseScaleY;
 
-// MOVEMENT VARS (FOR PHYSICS IMPLEMENTATION)
+// MOVEMENT VARIABLES (FOR PHYSICS IMPLEMENTATION)
     bool  onGround;
     float moveSpeed;
     float gravity;
@@ -51,7 +49,7 @@ protected:
     // Try to load a texture and compute hitbox width from it.
     // Returns false and falls back to placeholder rectangle if the file
     // does not exist — enemies will still function fully.
-    bool tryLoadTexture(const char* path, float targetH);
+    bool loadTexture(float targetH);
 
     void resolveHorizontal();
     void resolveVertical();
@@ -60,21 +58,18 @@ protected:
     void transitionTo(EnemyAIState* newState);
 
 public:
-    // targetH      : desired rendered height in pixels (width auto-calculated from texture)
-    // spritePath   : relative path; if the file is missing a coloured box is drawn instead
-    // fallbackColor: the colour of that placeholder box
     Enemy(float x, float y, float targetH,
           int hp,
-          const char* spritePath,
-          sf::Color fallbackColor,
+          const char*  spritePath,
           const Level* lvl,
           Player* p,
           EntityManager* em);
 
     virtual ~Enemy();
 
-// Cannot copy objects
-    Enemy(const Enemy&)            = delete;
+// If we try to cipy an enemy into the other, if one dies, with it the composed EnemyAIState and Weapon will also be deleted, and when
+// the copied Enemy will try to use it, but it is deleted.
+    Enemy(const Enemy&) = delete;
     Enemy& operator=(const Enemy&) = delete;
 
     virtual void update(float dt) override;
@@ -96,6 +91,8 @@ public:
     float getAttackRange() const;
     bool isOnGround() const;
     Player* getPlayer() const;
-// Retargets AI to the newly spawned player
+    float getWidth() const;
+    float getVelocityY() const;
     virtual void onPlayerRespawn(Player* newPlayer) override { player = newPlayer; }
+    virtual void applyScreenClamp(float cameraX) override;
 };

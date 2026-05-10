@@ -32,7 +32,8 @@ void ProjectileWeapon::fire(float x, float y,
                              bool  fromPlayer,
                              EntityManager& em)
 {
-    if (!canFire() || !hasAmmo()) return;
+    if (!canFire() || !hasAmmo()) 
+        return;
 
     float vx = facingRight ? projectileSpeed : -projectileSpeed;
 

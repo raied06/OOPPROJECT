@@ -19,7 +19,7 @@ protected:
     float cooldownTimer; // counts DOWN to 0; fire is allowed when <= 0
 
 public:
-    explicit Weapon(float cooldown);
+    Weapon(float cooldown);
     virtual ~Weapon() {}
 
     // Non-copyable (subclasses own heap resources)

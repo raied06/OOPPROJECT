@@ -20,7 +20,6 @@ Martian::Martian(float x, float y,
             MARTIAN_TARGET_H,
             MARTIAN_HP,
             "Sprites/Enemies/Martian.png",
-            sf::Color(60, 200, 120),   // alien-green placeholder
             lvl, p, em),
       hasLanded(false)
 {

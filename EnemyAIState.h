@@ -43,8 +43,8 @@ class PatrolState : public EnemyAIState
     bool  walkingRight;
 
 public:
-    // patrolDuration: how many seconds before reversing (default 2 s)
-    explicit PatrolState(float duration = 2.0f);
+    // patrolDuration: how many seconds before reversing (default 4 s)
+    explicit PatrolState(float duration = 4.0f);
 
     void           enter(Enemy& enemy) override;
     EnemyAIState*  update(Enemy& enemy, float dt) override;

@@ -42,5 +42,8 @@ public:
     // Called on every entity when the player respawns so AI can retarget.
     // Base class no-op — Enemy overrides to update its player pointer.
     virtual void onPlayerRespawn(Player* newPlayer) {}
-};
 
+    // Called each frame to clamp entity to screen boundaries.
+    // Base class no-op — Enemy overrides to prevent walking off right edge.
+    virtual void applyScreenClamp(float cameraX) {}
+};

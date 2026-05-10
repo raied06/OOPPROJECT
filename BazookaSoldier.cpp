@@ -22,7 +22,6 @@ BazookaSoldier::BazookaSoldier(float x, float y,
             BAZOOKA_TARGET_H,
             BAZOOKA_HP,
             "Sprites/Enemies/bazooka_soldier.png",
-            sf::Color(180, 60, 20),   // dark-orange placeholder
             lvl, p, em)
 {
     moveSpeed      = BAZOOKA_MOVE_SPEED;

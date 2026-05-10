@@ -22,7 +22,6 @@ ShieldedSoldier::ShieldedSoldier(float x, float y,
             SHIELDED_TARGET_H,
             SHIELDED_HP,
             "Sprites/Enemies/shielded_soldier.png",
-            sf::Color(80, 80, 160),   // steel-blue placeholder
             lvl, p, em)
 {
     moveSpeed      = SHIELDED_MOVE_SPEED;

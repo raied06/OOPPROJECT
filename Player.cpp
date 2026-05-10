@@ -98,6 +98,20 @@ void Player::handleInput()
     fireHeldLastFrame = fireHeld;
 }
 
+void Player::applyScreenClamp(float cameraX)
+{
+    // Left boundary — player cannot go behind the camera's left edge.
+    if (positionX < cameraX) {
+        positionX = cameraX;
+        if (velocityX < 0.0f) velocityX = 0.0f;
+    }
+    // Right boundary — player cannot go past the camera's right edge.
+    if (positionX + entityWidth > cameraX + 1600.0f) {
+        positionX = cameraX + 1600.0f - entityWidth;
+        if (velocityX > 0.0f) velocityX = 0.0f;
+    }
+}
+
 void Player::update(float dt)
 {
     if (!isActive) return;

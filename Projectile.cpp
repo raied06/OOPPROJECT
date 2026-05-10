@@ -11,6 +11,12 @@ Projectile::Projectile(float x, float y, float w, float h,
       entities(em)
 {}
 
+void Projectile::applyScreenClamp(float cameraX)
+{
+    if (positionX + entityWidth < cameraX || positionX > cameraX + 1600.0f)
+        deactivateEntity();
+}
+
 void Projectile::checkEntityCollisions()
 {
     if (!entities || !isActive) return;

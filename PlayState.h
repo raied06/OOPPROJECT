@@ -2,6 +2,7 @@
 #include "GameState.h"
 #include "Level.h"
 #include "Player.h"
+#include "Enemy.h"
 #include "RebelSoldier.h"
 #include "ShieldedSoldier.h"
 #include "BazookaSoldier.h"

@@ -11,6 +11,7 @@ PatrolState::PatrolState(float duration)
       walkingRight(true)
 {}
 
+
 void PatrolState::enter(Enemy& enemy)
 {
     // Pick the direction that faces away from the nearest world edge,

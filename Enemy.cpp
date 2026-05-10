@@ -2,25 +2,21 @@
 #include "Player.h"
 #include "EntityManager.h"
 #include "Weapon.h"
-//#include <cmath>
 #include <iostream>
 
 
 Enemy::Enemy(float x, float y, float targetH,
              int hp,
              const char*    spritePath,
-             sf::Color      fallbackColor,
              const Level*   lvl,
              Player*        p,
              EntityManager* em)
-    : DamageableEntity(x, y, 1.0f, targetH, hp), // width=1 placeholder; fixed in tryLoadTexture
+    : DamageableEntity(x, y, 1.0f, targetH, hp),
       level(lvl),
       player(p),
       entities(em),
       currentState(nullptr),
       weapon(nullptr),
-      hasTexture(false),
-      placeholderColor(fallbackColor),
       facingRight(false),
       baseScaleX(1.0f),
       baseScaleY(1.0f),
@@ -31,14 +27,9 @@ Enemy::Enemy(float x, float y, float targetH,
       detectionRange(450.0f),
       attackRange(250.0f)
 {
-    hasTexture = tryLoadTexture(spritePath, targetH);
+    texture.loadFromFile(spritePath);
+    loadTexture(targetH);
 
-    // If no sprite loaded, give the placeholder box a sensible width.
-    if (!hasTexture)
-        entityWidth = targetH * 0.55f;
-
-    // Begin in PatrolState. Subclasses can call transitionTo() in their own
-    // constructor to start in a different state.
     currentState = new PatrolState();
     currentState->enter(*this);
 }
@@ -52,21 +43,11 @@ Enemy::~Enemy()
     }
     delete weapon;
     weapon = nullptr;
-    // level, player, entities are non-owning — do NOT delete them.
+    // level, player, entities are not owned here (aggregation) so they will not be deleted.
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Texture loading
-// ─────────────────────────────────────────────────────────────────────────────
-
-bool Enemy::tryLoadTexture(const char* path, float targetH)
+bool Enemy::loadTexture(float targetH)
 {
-    if (!texture.loadFromFile(path)) {
-        std::cout << "Enemy: no sprite at \"" << path
-                  << "\" — using placeholder rectangle.\n";
-        return false;
-    }
-
     sprite.setTexture(texture);
 
     float scale = targetH / static_cast<float>(texture.getSize().y);
@@ -77,17 +58,6 @@ bool Enemy::tryLoadTexture(const char* path, float targetH)
 
     return true;
 }
-
-bool Enemy::receiveProjectileHit(int damage, bool fromPlayer)
-{
-    if (!fromPlayer) return false; // enemy bullets don't hurt other enemies
-    takeDamage(damage);
-    return true;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// AI state helpers
-// ─────────────────────────────────────────────────────────────────────────────
 
 void Enemy::transitionTo(EnemyAIState* newState)
 {
@@ -102,10 +72,19 @@ void Enemy::transitionTo(EnemyAIState* newState)
 
 float Enemy::distanceToPlayer() const
 {
-    if (!player) return 999999.0f;
+    if (!player) 
+        return 999999.0f;
     float dx = player->getPosX() - positionX;
     float dy = player->getPosY() - positionY;
-    return std::sqrt(dx * dx + dy * dy);
+    // TO calculate the root, I am using Newton-Raphson method so that even the numbers which are not perfect squares
+    // can easily be found. Using the formula of it and after simplifying it we get formula:
+    //					nextGuess = (previousGuess + originalValue/previousGuess)/2
+    // Doing it for 50 iterations to obtain more efficient results for very large numbers.
+    double guess = (dx * dx + dy * dy) / 2.0;
+    for (int i = 0; i < 50; i++) {
+        guess = (guess / 2.0) + ((dx * dx + dy * dy) / (2.0 * guess));
+    }
+    return guess;
 }
 
 float Enemy::getDetectionRange() const
@@ -128,9 +107,15 @@ Player* Enemy::getPlayer() const
     return player;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Movement — called by AI states
-// ─────────────────────────────────────────────────────────────────────────────
+float Enemy::getWidth() const
+{
+    return entityWidth;
+}
+
+float Enemy::getVelocityY() const
+{
+    return velocityY;
+}
 
 void Enemy::moveLeft()
 {
@@ -146,9 +131,12 @@ void Enemy::moveRight()
 
 void Enemy::moveTowardPlayer()
 {
-    if (!player) return;
-    if (player->getPosX() < positionX) moveLeft();
-    else                                moveRight();
+    if (!player) 
+        return;
+    if (player->getPosX() < positionX) 
+        moveLeft();
+    else                                
+        moveRight();
 }
 
 void Enemy::stopMoving()
@@ -160,11 +148,11 @@ void Enemy::fireWeapon()
 {
     if (!weapon || !entities) return;
 
-    // Face the player before shooting.
+    // Face the player before shooting
     if (player)
         facingRight = (player->getPosX() >= positionX);
 
-    // Spawn projectile from the enemy's center.
+    // Firing from the entity's middle
     weapon->fire(
         positionX + entityWidth  * 0.5f,
         positionY + entityHeight * 0.5f,
@@ -174,10 +162,6 @@ void Enemy::fireWeapon()
     );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Physics — identical axis-separation logic as Soldier, kept separate per UML
-// ─────────────────────────────────────────────────────────────────────────────
-
 void Enemy::resolveHorizontal()
 {
     float topY    = positionY + 2.0f;
@@ -185,16 +169,16 @@ void Enemy::resolveHorizontal()
 
     if (velocityX < 0.0f) {
         if (level->checkLeftWall(positionX, topY, bottomY)) {
-            int col    = static_cast<int>(positionX / level->getCellSize());
-            positionX  = (col + 1) * static_cast<float>(level->getCellSize());
+            int col = (int)(positionX / level->getCellSize());
+            positionX = (col + 1) * (float)(level->getCellSize());
             velocityX  = 0.0f;
         }
     }
     else if (velocityX > 0.0f) {
         float rightEdge = positionX + entityWidth;
         if (level->checkRightWall(rightEdge, topY, bottomY)) {
-            int col    = static_cast<int>(rightEdge / level->getCellSize());
-            positionX  = col * static_cast<float>(level->getCellSize()) - entityWidth;
+            int col = (int)(rightEdge / level->getCellSize());
+            positionX = col * (float)(level->getCellSize()) - entityWidth;
             velocityX  = 0.0f;
         }
     }
@@ -209,7 +193,7 @@ void Enemy::resolveVertical()
         float feetY = positionY + entityHeight + 1.0f;
         int hitRow;
         if (level->checkGroundBelow(feetY, leftX, rightX, hitRow)) {
-            positionY = hitRow * static_cast<float>(level->getCellSize()) - entityHeight;
+            positionY = hitRow * (float)(level->getCellSize()) - entityHeight;
             velocityY = 0.0f;
             onGround  = true;
         }
@@ -234,27 +218,25 @@ void Enemy::resolveVertical()
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Update
-// ─────────────────────────────────────────────────────────────────────────────
-
 void Enemy::update(float dt)
 {
     if (!isActive) return;
 
-    // 1. Tick damage timers (invincibility, flash).
+    // Update the invincibility and flash if got a git
     updateDamageTimers(dt);
 
-    // 2. Tick weapon cooldown.
-    if (weapon) weapon->update(dt);
+    // Update Weapon cooldown (if any)
+    if (weapon) 
+        weapon->update(dt);
 
-    // 3. Run AI — may transition to a new state.
+    // Run the enemy AI (change the enemy state if certain conditions hold)
     if (currentState) {
         EnemyAIState* next = currentState->update(*this, dt);
-        if (next) transitionTo(next);
+        if (next) 
+            transitionTo(next);
     }
 
-    // 4. Physics — gravity → horizontal move → wall resolution → vertical move → ground resolution.
+    // Running the physics for enemy (same as Soldier)
     velocityY += gravity * dt;
     if (velocityY > maxFallSpeed) velocityY = maxFallSpeed;
 
@@ -272,10 +254,6 @@ void Enemy::update(float dt)
     resolveVertical();
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Render
-// ─────────────────────────────────────────────────────────────────────────────
-
 void Enemy::render(sf::RenderWindow& window, float cameraX, float cameraY)
 {
     if (!isActive) return;
@@ -283,53 +261,31 @@ void Enemy::render(sf::RenderWindow& window, float cameraX, float cameraY)
     float screenX = positionX - cameraX;
     float screenY = positionY - cameraY;
 
-    // Basic frustum cull — skip if completely off-screen.
     if (screenX + entityWidth  < 0.0f || screenX > 1600.0f) return;
     if (screenY + entityHeight < 0.0f || screenY > 900.0f)  return;
 
-    if (hasTexture) {
-        applyDamageFlash(sprite);
+    applyDamageFlash(sprite);
 
-        // Enemy sprites naturally face LEFT (opposite of the player sheet).
-        // So facingRight=true needs the horizontal flip, facingLeft=false does not.
-        if (!facingRight) {
-            sprite.setScale( baseScaleX, baseScaleY);
-            sprite.setPosition(screenX, screenY);
-        }
-        else {
-            sprite.setScale(-baseScaleX, baseScaleY);
-            sprite.setPosition(screenX + entityWidth, screenY);
-        }
-        window.draw(sprite);
+    if (!facingRight) {
+        sprite.setScale( baseScaleX, baseScaleY);
+        sprite.setPosition(screenX, screenY);
     }
     else {
-        // ── Coloured placeholder rectangle ───────────────────────────────────
-        sf::RectangleShape rect(sf::Vector2f(entityWidth, entityHeight));
-        rect.setPosition(screenX, screenY);
+        sprite.setScale(-baseScaleX, baseScaleY);
+        sprite.setPosition(screenX + entityWidth, screenY);
+    }
+    window.draw(sprite);
+}
 
-        if (isInvincible()) {
-            // Flicker using the same phase logic as applyDamageFlash.
-            int phase = static_cast<int>(flashTimer / 0.08f);
-            rect.setFillColor(phase % 2 == 0
-                ? sf::Color(255, 60, 60, 180)
-                : placeholderColor);
-        }
-        else {
-            rect.setFillColor(placeholderColor);
-        }
+void Enemy::applyScreenClamp(float cameraX)
+{
+    // Don't clamp enemies that haven't been reached by the camera yet.
+    if (positionX > cameraX + 1600.0f) return;
 
-        rect.setOutlineColor(sf::Color::Black);
-        rect.setOutlineThickness(2.0f);
-        window.draw(rect);
-
-        // Small direction indicator so you can tell which way it's facing.
-        sf::RectangleShape arrow(sf::Vector2f(entityWidth * 0.25f, entityHeight * 0.1f));
-        arrow.setFillColor(sf::Color::White);
-        float arrowX = facingRight
-            ? screenX + entityWidth * 0.7f
-            : screenX + entityWidth * 0.05f;
-        arrow.setPosition(arrowX, screenY + entityHeight * 0.45f);
-        window.draw(arrow);
+    float rightLimit = cameraX + 1600.0f - entityWidth;
+    if (positionX > rightLimit) {
+        positionX = rightLimit;
+        velocityX = 0.0f;
     }
 }
 

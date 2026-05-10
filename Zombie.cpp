@@ -15,8 +15,7 @@ Zombie::Zombie(float x, float y,
     : Enemy(x, y,
             ZOMBIE_TARGET_H,
             ZOMBIE_HP,
-            "Sprites/Enemies/Zombies.png",
-            sf::Color(80, 130, 60),   // sickly-green placeholder
+            "Sprites/Enemies/Zombie.png",
             lvl, p, em),
       contactCooldown(0.0f)
 {

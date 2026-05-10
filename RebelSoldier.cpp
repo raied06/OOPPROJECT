@@ -21,8 +21,7 @@ RebelSoldier::RebelSoldier(float x, float y,
     : Enemy(x, y,
             REBEL_TARGET_H,
             REBEL_HP,
-            "Sprites/Enemies/rebel_soldier.png", // falls back to placeholder if missing
-            sf::Color(139, 90, 43),               // earthy-brown placeholder box
+            "Sprites/Enemies/rebel_soldier.png",
             lvl, p, em)
 {
     // Override default Enemy stats.

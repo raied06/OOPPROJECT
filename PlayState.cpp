@@ -22,14 +22,15 @@ PlayState::PlayState()
     entities->add(player); // manager owns it now
 
     // ── Spawn initial enemy batches ──────────────────────────────────────────
-    spawnRebelBatch      ( 800.0f, 200.0f, 3);
-    spawnShieldedBatch   (1600.0f, 200.0f, 2);
-    spawnBazookaBatch    (2400.0f, 200.0f, 2);
-    spawnGrenadeBatch    (3200.0f, 200.0f, 2);
-    spawnZombieBatch     (4000.0f, 200.0f, 4);
-    spawnMummyBatch      (4800.0f, 200.0f, 2);
-    spawnMartianBatch    (5600.0f, 100.0f, 2); // spawns high — flying phase
-    spawnParatrooperBatch(6400.0f,   0.0f, 3); // spawns at top of screen
+    // World is 12800px wide. 8 enemy types, one batch every 1400px.
+    spawnRebelBatch      ( 1400.0f, 200.0f, 3);
+    spawnShieldedBatch   ( 2800.0f, 200.0f, 2);
+    spawnBazookaBatch    ( 4200.0f, 200.0f, 2);
+    spawnGrenadeBatch    ( 5600.0f, 200.0f, 2);
+    spawnZombieBatch     ( 7000.0f, 200.0f, 4);
+    spawnMummyBatch      ( 8400.0f, 200.0f, 2);
+    spawnMartianBatch    ( 9800.0f, 100.0f, 2);
+    spawnParatrooperBatch(11200.0f,   0.0f, 3);
 
     if (!bgTex.loadFromFile("Sprites/Background.png")) {
         std::cout << "ERROR: background texture failed\n";
@@ -71,6 +72,14 @@ void PlayState::update(float dt)
     // step needed here anymore.
     entities->updateAll(dt);
 
+    // Clamp enemies to right screen edge — left side intentionally unclamped
+    // so enemies left behind by the player stay where they are.
+    for (int i = 0; i < entities->getCount(); i++) {
+        Entity* e = entities->getEntity(i);
+        if (e && e->getIsActive())
+            e->applyScreenClamp(cameraX);
+    }
+
     // Check player death BEFORE removeDead() frees the memory — after that the
     // pointer is dangling and getIsActive() would be undefined behaviour.
     if (player != nullptr && !player->getIsActive()) {
@@ -92,18 +101,6 @@ void PlayState::update(float dt)
         respawnTimer -= dt;
         if (respawnTimer <= 0.0f)
             respawnPlayer();
-    }
-
-    // Clamping the player to the left boundary of the screen and right boundary of the world
-    if (player != nullptr) {
-        if (player->getPosX() < cameraX) {
-            player->setPosition(cameraX, player->getPosY());
-            player->setVelocity(0.0f, player->getVelocityY());
-        }
-        if (player->getPosX() + player->getEntityWidth() > cameraX + 1600.0f) {
-            player->setPosition(cameraX + 1600.0f - player->getEntityWidth(), player->getPosY());
-            player->setVelocity(0.0f, player->getVelocityY());
-        }
     }
 
     if (player != nullptr) {

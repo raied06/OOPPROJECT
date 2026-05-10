@@ -14,8 +14,7 @@ Paratrooper::Paratrooper(float x, float y,
     : Enemy(x, y,
             PARA_TARGET_H,
             PARA_HP,
-            "Sprites/Enemies/rebel_soldier.png", // reuse rebel sprite — swap when art is ready
-            sf::Color(100, 140, 80),              // olive-green placeholder
+            "Sprites/Enemies/Paratrooper.png",
             lvl, p, em),
       hasLanded(false)
 {

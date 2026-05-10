@@ -35,4 +35,6 @@ public:
     // Swap weapon on pickup — Player takes ownership of newWeapon
     void    equipWeapon(Weapon* newWeapon);
     Weapon* getWeapon() const { return weapon; }
+
+    virtual void applyScreenClamp(float cameraX) override;
 };

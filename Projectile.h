@@ -37,6 +37,9 @@ public:
     int  getDamage()    const { return damage; }
     bool isFromPlayer() const { return fromPlayer; }
 
+    // Deactivates the projectile if it travels outside the visible screen.
+    virtual void applyScreenClamp(float cameraX) override;
+
     // Still pure virtual.
     virtual void update(float dt) = 0;
     virtual void render(sf::RenderWindow& window, float cameraX, float cameraY) = 0;
