@@ -57,6 +57,14 @@ bool ShieldedSoldier::playerIsInFront() const
         return playerMidX < myMidX;  // player is to the left
 }
 
+bool ShieldedSoldier::receiveMeleeHit(int /*damage*/, bool fromPlayer)
+{
+    if (!fromPlayer) return false;
+    // Piercing knife ignores the shield and kills instantly.
+    DamageableEntity::takeDamage(9999);
+    return true;
+}
+
 void ShieldedSoldier::takeDamage(int amount)
 {
     // Shield blocks frontal hits.  We treat ALL incoming damage here as a

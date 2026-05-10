@@ -39,6 +39,10 @@ public:
     // Base class ignores all hits — subclasses opt in by overriding.
     virtual bool receiveProjectileHit(int damage, bool fromPlayer) { return false; }
 
+    // Called by a piercing melee weapon (Marco's knife).
+    // Bypasses shield logic — enemies override this separately from receiveProjectileHit.
+    virtual bool receiveMeleeHit(int damage, bool fromPlayer) { return receiveProjectileHit(damage, fromPlayer); }
+
     // Called on every entity when the player respawns so AI can retarget.
     // Base class no-op — Enemy overrides to update its player pointer.
     virtual void onPlayerRespawn(Player* newPlayer) {}

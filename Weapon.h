@@ -32,6 +32,12 @@ public:
     // True when the weapon is ready to fire.
     bool canFire() const { return cooldownTimer <= 0.0f; }
 
+    // Reset cooldown so a second simultaneous shot can be fired (e.g. Marco's dual fire).
+    void clearCooldown() { cooldownTimer = 0.0f; }
+
+    // Halve current cooldown (used by Fiolina's supercharged power-up).
+    void halveCooldown() { cooldownTimer *= 0.5f; }
+
     // Spawn a projectile into the entity pool.
     //   x, y        — world-space spawn point (caller's centre, typically)
     //   facingRight — direction of fire

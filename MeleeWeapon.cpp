@@ -2,8 +2,8 @@
 #include "EntityManager.h"
 #include "Entity.h"
 
-MeleeWeapon::MeleeWeapon(float cooldown, int damage, float range, float vRange)
-    : Weapon(cooldown), damage(damage), range(range), vRange(vRange)
+MeleeWeapon::MeleeWeapon(float cooldown, int damage, float range, float vRange, bool piercing)
+    : Weapon(cooldown), damage(damage), range(range), vRange(vRange), piercing(piercing)
 {}
 
 void MeleeWeapon::fire(float x, float y, bool facingRight, bool fromPlayer,
@@ -29,6 +29,9 @@ void MeleeWeapon::fire(float x, float y, bool facingRight, bool fromPlayer,
         // Must be within the vertical swing arc
         if (dy < -vRange || dy > vRange)                 continue;
 
-        e->receiveProjectileHit(damage, fromPlayer);
+        if (piercing)
+            e->receiveMeleeHit(damage, fromPlayer);
+        else
+            e->receiveProjectileHit(damage, fromPlayer);
     }
 }

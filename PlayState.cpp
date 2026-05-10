@@ -68,7 +68,7 @@ void PlayState::handleInput(sf::Event& event, sf::RenderWindow& window)
         // ── Character switching via runtime polymorphism (TAB key) ────────────
         // player->createNext() is a pure virtual call — no if/else needed here.
         // Each concrete character class returns the next one in the cycle.
-        if (event.key.scancode == sf::Keyboard::Scan::Tab && player != nullptr) {
+        if (event.key.scancode == sf::Keyboard::Scan::Z && player != nullptr) {
             Player* next = player->createNext(
                 player->getPosX(), player->getPosY(), level, entities);
             // Update prototype so respawn recreates the newly selected character.

@@ -4,7 +4,14 @@
 #include "MeleeWeapon.h"
 #include "FlameWeapon.h"
 #include "LaserWeapon.h"
+#include "BallisticProjectile.h"
 #include <iostream>
+
+// Base knife: cooldown 0.5s, damage 2 HP, 90 px reach. Subclasses override.
+Weapon* Player::createKnife() const
+{
+    return new MeleeWeapon(0.5f, 2, 90.0f);
+}
 
 static const float PLAYER_H = 150.0f;
 
@@ -12,6 +19,11 @@ static const float PLAYER_H = 150.0f;
 
 Player::Player(float x, float y, const Level* lvl, EntityManager* em, int hp)
     : Soldier(x, y, 1.0f, PLAYER_H, hp, lvl),
+    grenadeCount(10),            // overridden in each subclass constructor
+    grenadeCooldownTimer(0.0f),
+    powerUpTimer(0.0f),
+    qHeldLastFrame(false),
+    gHeldLastFrame(false),
     jumpHeldLastFrame(false),
     fireHeldLastFrame(false),
     knifeHeldLastFrame(false),
@@ -121,9 +133,45 @@ void Player::updateActiveSprite()
 void Player::setPistol(float cooldown)
 {
     delete weaponSlots[0];
+    // Base pistol damage: 3 HP per shot (from design spec).
     weaponSlots[0] = new ProjectileWeapon(
-        cooldown, 1, -1, 600.0f, false, sf::Color(255, 255, 100), level
+        cooldown, 3, -1, 600.0f, false, sf::Color(255, 255, 100), level
     );
+}
+
+void Player::giveDefaultKnife()
+{
+    delete weaponSlots[4];
+    weaponSlots[4] = createKnife(); // virtual dispatch → subclass override picks up
+}
+
+// ── Throwable grenade ─────────────────────────────────────────────────────────
+void Player::throwGrenade(float vxMultiplier)
+{
+    if (!entities) return;
+    float spawnX = facingRight ? positionX + entityWidth * 0.5f
+                               : positionX + entityWidth * 0.5f;
+    float spawnY = positionY + entityHeight * 0.2f;
+    float vx = (facingRight ? GRENADE_THROW_VX : -GRENADE_THROW_VX) * vxMultiplier;
+    float vy = GRENADE_THROW_VY;
+
+    entities->add(new BallisticProjectile(
+        spawnX, spawnY, vx, vy,
+        GRENADE_BASE_DAMAGE,
+        true,                // fromPlayer
+        level, entities,
+        sf::Color(100, 200, 50),
+        grenadeBlastRadius()
+    ));
+}
+
+// ── Power-up activation ───────────────────────────────────────────────────────
+void Player::activatePowerUp()
+{
+    if (isPowerUpActive()) return; // ignore re-press while active
+    powerUpTimer = powerUpDuration();
+    onPowerUpActivated();
+    std::cout << "[POWER-UP] Activated for " << powerUpDuration() << "s\n";
 }
 
 // ── Private helpers ───────────────────────────────────────────────────────────
@@ -151,8 +199,8 @@ void Player::giveAllWeapons()
         weaponSlots[3] = new ProjectileWeapon(
             0.8f, 5, -1, 350.0f, true, sf::Color(100, 200, 50), level, 120.0f);
 
-    if (!weaponSlots[4]) // Knife — melee, 90 px reach
-        weaponSlots[4] = new MeleeWeapon(0.4f, 3, 90.0f);
+    if (!weaponSlots[4]) // Knife — melee, 90 px reach (character-specific via createKnife)
+        weaponSlots[4] = createKnife();
 
     if (!weaponSlots[5]) // Flame Shot
         weaponSlots[5] = new FlameWeapon(0.1f, 2, level, 180.0f);
@@ -223,8 +271,8 @@ void Player::handleInput()
         for (int i = 1; i <= 6; i++) numHeld[i] = numNow[i];
     }
 
-    // ── Knife attack (X key, dev mode, edge-detected) ─────────────────────────
-    bool knifeHeld = devMode && Keyboard::isKeyPressed(Keyboard::X);
+    // ── Knife attack (X key, edge-detected) — available outside dev mode ────
+    bool knifeHeld = Keyboard::isKeyPressed(Keyboard::X);
     if (knifeHeld && !knifeHeldLastFrame && weaponSlots[4] && entities) {
         float swingX = facingRight ? positionX + entityWidth : positionX;
         float swingY = positionY + entityHeight * 0.5f;
@@ -247,10 +295,36 @@ void Player::handleInput()
     if (jumpHeld && !jumpHeldLastFrame) jump();
     jumpHeldLastFrame = jumpHeld;
 
-    // ── Shoot (LMB or Z key, edge-detected) ──────────────────────────────────
+    // ── Grenade throw (G key) — works without dev mode ───────────────────────
+    bool gHeld = Keyboard::isKeyPressed(Keyboard::G);
+    if (gHeld && !gHeldLastFrame
+        && grenadeCount > 0
+        && grenadeCooldownTimer <= 0.0f)
+    {
+        // grenadesPerThrow() == 2 (Eri's power-up) spawns a bonus grenade
+        // that flies ~40% farther (~2 blocks), still consuming only one grenade.
+        throwGrenade();
+        if (grenadesPerThrow() >= 2)
+            throwGrenade(1.4f);
+        grenadeCount--;
+        grenadeCooldownTimer = GRENADE_THROW_COOLDOWN;
+        std::cout << "Grenade thrown. Remaining: " << grenadeCount << "\n";
+    }
+    gHeldLastFrame = gHeld;
+
+    // ── Power-up activation (Q key) ──────────────────────────────────────────
+    bool qHeld = Keyboard::isKeyPressed(Keyboard::Q);
+    if (qHeld && !qHeldLastFrame) activatePowerUp();
+    qHeldLastFrame = qHeld;
+
+    // ── Shoot (LMB or P key) ─────────────────────────────────────────────────
     bool fireHeld = Mouse::isButtonPressed(Mouse::Left)
-                 || Keyboard::isKeyPressed(Keyboard::Z);
-    if (fireHeld && !fireHeldLastFrame) {
+                 || Keyboard::isKeyPressed(Keyboard::P);
+    // HMG (slot 1) and characters with autoFire-on-hold (Fiolina supercharge)
+    // fire continuously while held; everything else needs an edge-press.
+    bool autoFire  = (activeSlot == 1) || autoFireOnHold();
+    bool shouldFire = autoFire ? fireHeld : (fireHeld && !fireHeldLastFrame);
+    if (shouldFire) {
         Weapon* w = weaponSlots[activeSlot];
         if (w && entities) {
             float spawnX = facingRight ? positionX + entityWidth + 2.0f : positionX - 4.0f;
@@ -259,6 +333,7 @@ void Player::handleInput()
             // Flash the fire sprite; knife animation takes priority so don't clobber it.
             if (knifeSpriteTimer <= 0.0f)
                 fireSpriteTimer = FIRE_ANIM_DURATION;
+            onShotFired(spawnX, spawnY, facingRight);
         }
     }
     fireHeldLastFrame = fireHeld;
@@ -284,6 +359,16 @@ void Player::update(float dt)
     // Tick sprite animation timers.
     if (fireSpriteTimer  > 0.0f) fireSpriteTimer  -= dt;
     if (knifeSpriteTimer > 0.0f) knifeSpriteTimer -= dt;
+
+    // Tick grenade throw cooldown and power-up timer.
+    if (grenadeCooldownTimer > 0.0f) grenadeCooldownTimer -= dt;
+    if (powerUpTimer > 0.0f) {
+        powerUpTimer -= dt;
+        if (powerUpTimer <= 0.0f) {
+            powerUpTimer = 0.0f;
+            std::cout << "[POWER-UP] Expired\n";
+        }
+    }
 
     updateActiveSprite();
 

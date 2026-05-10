@@ -24,7 +24,7 @@ Enemy::Enemy(float x, float y, float targetH,
       moveSpeed(120.0f),
       gravity(1500.0f),
       maxFallSpeed(1200.0f),
-      detectionRange(450.0f),
+      detectionRange(315.0f),
       attackRange(250.0f)
 {
     texture.loadFromFile(spritePath);
