@@ -6,33 +6,86 @@
 
 static const float PLAYER_H = 150.0f;
 
+// ── Character stats table ─────────────────────────────────────────────────────
+// Order MUST match CharacterType enum: Marco, Tarma, Eri, Fiolina
+const CharacterStats Player::CHARACTER_TABLE[] =
+{
+    //  name              sprite path                       hp  speed   jump     pistolCD  placeholder tint
+    { "Marco Rossi",    "Sprites/Characters/marco.png",    5,  300.f,  -700.f,  0.35f,   sf::Color(255, 220, 180) }, // peach
+    { "Tarma Roving",   "Sprites/Characters/tarma.png",    6,  260.f,  -650.f,  0.40f,   sf::Color(180, 200, 255) }, // light-blue
+    { "Eri Kasamoto",   "Sprites/Char.png",                5,  300.f,  -700.f,  0.35f,   sf::Color(255, 255, 255) }, // no tint (real sprite)
+    { "Fiolina Germi",  "Sprites/Characters/fio.png",      4,  360.f,  -760.f,  0.28f,   sf::Color(200, 255, 200) }, // pale green
+};
+
 Player::Player(float x, float y, const Level* lvl, EntityManager* em, int hp)
     : Soldier(x, y, 1.0f, PLAYER_H, hp, lvl),
     jumpHeldLastFrame(false),
     fireHeldLastFrame(false),
     knifeHeldLastFrame(false),
+    switchHeldLastFrame(false),
+    currentCharacter(CharacterType::Eri),
     activeSlot(0),
     prevSlot(0),
     devMode(false),
     entities(em)
 {
-    // Initialise all slots to null before creating anything
     for (int i = 0; i < SLOT_COUNT; i++)
         weaponSlots[i] = nullptr;
 
-    if (!texture.loadFromFile("Sprites/Char.png"))
-        std::cout << "ERROR: Player texture failed to load\n";
-    sprite.setTexture(texture);
-
-    float uniformScale = PLAYER_H / (float)texture.getSize().y;
-    entityWidth = (float)texture.getSize().x * uniformScale;
-    sprite.setScale(uniformScale, uniformScale);
-    setBaseScale(uniformScale, uniformScale);
-
-    // Slot 0: Pistol — always present, infinite ammo
+    // Slot 0: Pistol — actual cooldown is set by applyCharacter() below.
     weaponSlots[0] = new ProjectileWeapon(
         0.35f, 1, -1, 600.0f, false, sf::Color(255, 255, 100), lvl
     );
+
+    // Apply Eri's stats and load her sprite (existing Char.png)
+    applyCharacter(CharacterType::Eri);
+}
+
+// ── Character system ─────────────────────────────────────────────────────────
+
+void Player::applyCharacter(CharacterType c)
+{
+    currentCharacter = c;
+    const CharacterStats& s = CHARACTER_TABLE[static_cast<int>(c)];
+
+    // Patch movement / health stats on the Soldier base.
+    moveSpeed    = s.moveSpeed;
+    jumpStrength = s.jumpStrength;
+    maxHP        = s.maxHP;
+    currentHP    = s.maxHP;   // full HP on character switch
+
+    // Replace the pistol with one tuned to this character's fire rate.
+    delete weaponSlots[0];
+    weaponSlots[0] = new ProjectileWeapon(
+        s.pistolCooldown, 1, -1, 600.0f, false, sf::Color(255, 255, 100), level
+    );
+
+    // Load the new sprite. Falls back to a tinted placeholder if the file
+    // is missing (the user will drop in real sprites later).
+    if (texture.loadFromFile(s.spritePath)) {
+        sprite.setTexture(texture, true);
+        sprite.setColor(sf::Color::White);
+    }
+    else {
+        std::cout << "Player: missing sprite \"" << s.spritePath
+                  << "\" — using tinted placeholder.\n";
+        sprite.setColor(s.placeholderTint);
+    }
+
+    float scale = PLAYER_H / static_cast<float>(texture.getSize().y);
+    entityWidth = static_cast<float>(texture.getSize().x) * scale;
+    sprite.setScale(scale, scale);
+    setBaseScale(scale, scale);
+
+    std::cout << "Character: " << s.name
+              << "  (HP " << maxHP
+              << ", speed " << moveSpeed
+              << ", pistolCD " << s.pistolCooldown << "s)\n";
+}
+
+const char* Player::getCharacterName() const
+{
+    return CHARACTER_TABLE[static_cast<int>(currentCharacter)].name;
 }
 
 Player::~Player()
@@ -152,9 +205,18 @@ void Player::handleInput()
     if (jumpHeld && !jumpHeldLastFrame) jump();
     jumpHeldLastFrame = jumpHeld;
 
-    // ── Shooting (ranged weapon, LMB or Z) ───────────────────────────────────
-    bool fireHeld = Mouse::isButtonPressed(Mouse::Left)
-                 || Keyboard::isKeyPressed(Keyboard::Z);
+    // ── Character switch (Z key, edge-detected) ──────────────────────────────
+    // Cycles Marco → Tarma → Eri → Fiolina → Marco …
+    bool switchHeld = Keyboard::isKeyPressed(Keyboard::Z);
+    if (switchHeld && !switchHeldLastFrame) {
+        int next = (static_cast<int>(currentCharacter) + 1)
+                   % static_cast<int>(CharacterType::COUNT);
+        applyCharacter(static_cast<CharacterType>(next));
+    }
+    switchHeldLastFrame = switchHeld;
+
+    // ── Shooting (LMB only — Z is now reserved for character switching) ─────
+    bool fireHeld = Mouse::isButtonPressed(Mouse::Left);
 
     if (fireHeld && !fireHeldLastFrame) {
         Weapon* w = weaponSlots[activeSlot];

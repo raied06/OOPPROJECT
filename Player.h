@@ -4,12 +4,37 @@
 class EntityManager;
 class Weapon;
 
+// ── Character identity ────────────────────────────────────────────────────────
+// The four playable Metal Slug characters. COUNT is sentinel for cycling.
+enum class CharacterType { Marco, Tarma, Eri, Fiolina, COUNT };
+
+// Stat block for one playable character — table lives in Player.cpp.
+struct CharacterStats
+{
+    const char* name;
+    const char* spritePath;
+    int         maxHP;
+    float       moveSpeed;       // px/s
+    float       jumpStrength;    // negative = upward
+    float       pistolCooldown;  // seconds between pistol shots
+    sf::Color   placeholderTint; // sprite tint shown when sprite file is missing
+};
+
 class Player : public Soldier
 {
 private:
     bool jumpHeldLastFrame;
     bool fireHeldLastFrame;
-    bool knifeHeldLastFrame; // edge-detect for X key knife attack
+    bool knifeHeldLastFrame;   // edge-detect for X key knife attack
+    bool switchHeldLastFrame;  // edge-detect for Z key character switch
+
+    // ── Character state ──────────────────────────────────────────────────────
+    CharacterType currentCharacter;
+    static const CharacterStats CHARACTER_TABLE[
+        static_cast<int>(CharacterType::COUNT)];
+
+    // Loads a character's stats and sprite onto this Player instance.
+    void applyCharacter(CharacterType c);
 
     // ── Weapon slots ─────────────────────────────────────────────────────────
     // 0 = Pistol   (always available)
@@ -42,6 +67,10 @@ public:
 
     void handleInput();
     virtual void update(float dt) override;
+
+    // Active character info — used by HUD / debug printouts.
+    CharacterType getCharacter()     const { return currentCharacter; }
+    const char*   getCharacterName() const;
 
     // Swap the pistol slot on pickup — Player takes ownership of newWeapon.
     void    equipWeapon(Weapon* newWeapon);
