@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(trooper)",
+      "Bash(zombie)",
+      "Bash(mummy)",
+      "Bash(martian\")",
+      "Bash(for f *)"
     ]
   }
 }

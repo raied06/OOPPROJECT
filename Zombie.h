@@ -35,4 +35,6 @@ public:
 
     // Override to add melee contact check on top of normal AI.
     virtual void update(float dt) override;
+
+    int getScoreValue() const override { return 200; }
 };

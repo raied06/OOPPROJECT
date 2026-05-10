@@ -34,4 +34,6 @@ public:
 
     // Override to switch gravity once landed.
     virtual void update(float dt) override;
+
+    int getScoreValue() const override { return 500; }
 };

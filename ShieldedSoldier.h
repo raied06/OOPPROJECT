@@ -38,6 +38,8 @@ public:
     // Marco's piercing knife bypasses the shield and instakills.
     virtual bool receiveMeleeHit(int damage, bool fromPlayer) override;
 
+    int getScoreValue() const override { return 200; }
+
 private:
     // Returns true when the player is currently standing in front of the shield.
     bool playerIsInFront() const;

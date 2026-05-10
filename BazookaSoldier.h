@@ -23,4 +23,6 @@ public:
                    EntityManager* em);
 
     virtual ~BazookaSoldier() {}
+
+    int getScoreValue() const override { return 300; }
 };

@@ -24,4 +24,6 @@ public:
                  EntityManager* em);
 
     virtual ~RebelSoldier() {}
+
+    int getScoreValue() const override { return 100; }
 };

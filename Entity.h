@@ -50,4 +50,9 @@ public:
     // Called each frame to clamp entity to screen boundaries.
     // Base class no-op — Enemy overrides to prevent walking off right edge.
     virtual void applyScreenClamp(float cameraX) {}
+
+    // Score awarded to the player when this entity dies.
+    // Default 0 — non-enemies (projectiles, player) award nothing.
+    // Concrete Enemy subclasses override to return their kill value.
+    virtual int getScoreValue() const { return 0; }
 };

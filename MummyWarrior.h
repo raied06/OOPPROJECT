@@ -45,4 +45,6 @@ public:
 
     // Ticks the resurrection timer and handles melee contact.
     virtual void update(float dt) override;
+
+    int getScoreValue() const override { return 400; }
 };

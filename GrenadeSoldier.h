@@ -25,4 +25,6 @@ public:
                    EntityManager* em);
 
     virtual ~GrenadeSoldier() {}
+
+    int getScoreValue() const override { return 250; }
 };
