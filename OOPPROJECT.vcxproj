@@ -163,10 +163,18 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     <ClInclude Include="EnemyAIState.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="Entitymanager.h" />
+    <ClInclude Include="EriPlayer.h" />
+    <ClInclude Include="Explosion.h" />
+    <ClInclude Include="FiolinaPlayer.h" />
+    <ClInclude Include="FlameProjectile.h" />
+    <ClInclude Include="FlameWeapon.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameState.h" />
     <ClInclude Include="GameStateManager.h" />
     <ClInclude Include="GrenadeSoldier.h" />
+    <ClInclude Include="LaserBeam.h" />
+    <ClInclude Include="LaserWeapon.h" />
+    <ClInclude Include="MarcoPlayer.h" />
     <ClInclude Include="Martian.h" />
     <ClInclude Include="MeleeWeapon.h" />
     <ClInclude Include="MummyWarrior.h" />
@@ -180,6 +188,7 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     <ClInclude Include="ShieldedSoldier.h" />
     <ClInclude Include="Soldier.h" />
     <ClInclude Include="StraightProjectile.h" />
+    <ClInclude Include="TarmaPlayer.h" />
     <ClInclude Include="Weapon.h" />
     <ClInclude Include="Zombie.h" />
   </ItemGroup>
@@ -191,9 +200,17 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     <ClCompile Include="EnemyAIState.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="Entitymanager.cpp" />
+    <ClCompile Include="EriPlayer.cpp" />
+    <ClCompile Include="Explosion.cpp" />
+    <ClCompile Include="FiolinaPlayer.cpp" />
+    <ClCompile Include="FlameProjectile.cpp" />
+    <ClCompile Include="FlameWeapon.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameStateManager.cpp" />
     <ClCompile Include="GrenadeSoldier.cpp" />
+    <ClCompile Include="LaserBeam.cpp" />
+    <ClCompile Include="LaserWeapon.cpp" />
+    <ClCompile Include="MarcoPlayer.cpp" />
     <ClCompile Include="Martian.cpp" />
     <ClCompile Include="MeleeWeapon.cpp" />
     <ClCompile Include="MummyWarrior.cpp" />
@@ -208,6 +225,7 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     <ClCompile Include="ShieldedSoldier.cpp" />
     <ClCompile Include="Soldier.cpp" />
     <ClCompile Include="StraightProjectile.cpp" />
+    <ClCompile Include="TarmaPlayer.cpp" />
     <ClCompile Include="Weapon.cpp" />
     <ClCompile Include="Zombie.cpp" />
   </ItemGroup>

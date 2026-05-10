@@ -1,5 +1,6 @@
 #include "BallisticProjectile.h"
 #include "EntityManager.h"
+#include "Explosion.h"
 
 static constexpr float RADIUS = 7.0f;
 
@@ -9,13 +10,13 @@ BallisticProjectile::BallisticProjectile(float x, float y,
                                           bool  fromPlayer,
                                           const Level* lvl,
                                           EntityManager* em,
-                                          sf::Color color)
-    : Projectile(x - RADIUS,
-                 y - RADIUS,
-                 RADIUS * 2.0f, RADIUS * 2.0f,
+                                          sf::Color color,
+                                          float     explosionRadius)
+    : Projectile(x - RADIUS, y - RADIUS, RADIUS * 2.0f, RADIUS * 2.0f,
                  damage, fromPlayer, lvl, em),
       gravity(900.0f),
-      maxFallSpeed(1000.0f)
+      maxFallSpeed(1000.0f),
+      explosionRadius(explosionRadius)
 {
     velocityX = vx;
     velocityY = vy;
@@ -36,7 +37,6 @@ void BallisticProjectile::update(float dt)
     positionX += velocityX * dt;
     positionY += velocityY * dt;
 
-    // ── World-bounds cull ────────────────────────────────────────────────────
     if (positionX < 0.0f ||
         positionX > static_cast<float>(level->getWidthInPixels()) ||
         positionY > static_cast<float>(level->getHeightInPixels())) {
@@ -44,18 +44,29 @@ void BallisticProjectile::update(float dt)
         return;
     }
 
-    // ── Entity collision (pure virtual dispatch — no dynamic_cast) ───────────
     checkEntityCollisions();
-    if (!isActive) return; // hit something — skip tile check
+    if (!isActive) {
+        // Hit an entity directly — still trigger explosion if applicable
+        if (explosionRadius > 0.0f && entities)
+            entities->add(new Explosion(
+                positionX + RADIUS, positionY + RADIUS,
+                explosionRadius, damage, fromPlayer, entities));
+        return;
+    }
 
-    // ── Ground / wall contact → deactivate ──────────────────────────────────
     float centerX = positionX + RADIUS;
     float centerY = positionY + RADIUS;
     float bottomY = positionY + RADIUS * 2.0f;
 
-    if (level->isSolidAtPixel(centerX, bottomY) ||
-        level->isSolidAtPixel(positionX,              centerY) ||
-        level->isSolidAtPixel(positionX + RADIUS * 2.0f, centerY)) {
+    bool hitTile = level->isSolidAtPixel(centerX, bottomY) ||
+                   level->isSolidAtPixel(positionX,                centerY) ||
+                   level->isSolidAtPixel(positionX + RADIUS * 2.0f, centerY);
+
+    if (hitTile) {
+        if (explosionRadius > 0.0f && entities)
+            entities->add(new Explosion(
+                centerX, centerY,
+                explosionRadius, damage, fromPlayer, entities));
         deactivateEntity();
     }
 }

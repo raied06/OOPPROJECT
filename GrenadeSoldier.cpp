@@ -2,7 +2,7 @@
 #include "ProjectileWeapon.h"
 
 // ── Tuning constants ──────────────────────────────────────────────────────────
-static constexpr float GRENADE_TARGET_H     = 84.0f;
+static constexpr float GRENADE_TARGET_H     = 150.0f;
 static constexpr int   GRENADE_HP           = 2;
 static constexpr float GRENADE_MOVE_SPEED   = 100.0f;
 static constexpr float GRENADE_DETECT_RANGE = 420.0f;

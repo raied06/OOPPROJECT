@@ -4,62 +4,63 @@
 class EntityManager;
 class Weapon;
 
-// ── Character identity ────────────────────────────────────────────────────────
-// The four playable Metal Slug characters. COUNT is sentinel for cycling.
-enum class CharacterType { Marco, Tarma, Eri, Fiolina, COUNT };
-
-// Stat block for one playable character — table lives in Player.cpp.
-struct CharacterStats
-{
-    const char* name;
-    const char* spritePath;
-    int         maxHP;
-    float       moveSpeed;       // px/s
-    float       jumpStrength;    // negative = upward
-    float       pistolCooldown;  // seconds between pistol shots
-    sf::Color   placeholderTint; // sprite tint shown when sprite file is missing
-};
-
+// Player — abstract base for all playable characters.
+// Each concrete subclass (MarcoPlayer, TarmaPlayer, etc.) sets its own
+// stats in its constructor and implements createNext() / createSelf()
+// for runtime-polymorphism-based character switching.
 class Player : public Soldier
 {
+protected:
+    // Weapon slots — subclasses populate slot 0 (pistol) in their constructor.
+    // 0=Pistol  1=HMG  2=Rocket  3=Grenade  4=Knife  5=Flame  6=Laser
+    static constexpr int SLOT_COUNT = 7;
+    Weapon* weaponSlots[SLOT_COUNT];
+
+    EntityManager* entities; // non-owning — used to spawn projectiles + knife scan
+
+    // Loads all 5 weapon sprites. Missing sprites fall back to pistol automatically.
+    void loadAllWeaponSprites(const char* pistolPath,
+                               const char* machineGunPath,
+                               const char* riflePath,
+                               const char* knifePath,
+                               const char* firePath);
+
+    // Helper: replaces slot 0 (called by subclasses to set pistol cooldown).
+    void setPistol(float cooldown);
+
 private:
     bool jumpHeldLastFrame;
     bool fireHeldLastFrame;
-    bool knifeHeldLastFrame;   // edge-detect for X key knife attack
-    bool switchHeldLastFrame;  // edge-detect for Z key character switch
+    bool knifeHeldLastFrame;
 
-    // ── Character state ──────────────────────────────────────────────────────
-    CharacterType currentCharacter;
-    static const CharacterStats CHARACTER_TABLE[
-        static_cast<int>(CharacterType::COUNT)];
-
-    // Loads a character's stats and sprite onto this Player instance.
-    void applyCharacter(CharacterType c);
-
-    // ── Weapon slots ─────────────────────────────────────────────────────────
-    // 0 = Pistol   (always available)
-    // 1 = HMG      (dev mode)
-    // 2 = Rocket   (dev mode)
-    // 3 = Grenade  (dev mode)
-    // 4 = Knife    (dev mode — melee, instant-return after swing)
-    static constexpr int SLOT_COUNT = 5;
-    Weapon* weaponSlots[SLOT_COUNT]; // OWNED
     int activeSlot;
-    int prevSlot; // slot to restore after a knife swing
+    int prevSlot; // restored after knife swing
 
-    // ── Developer mode ────────────────────────────────────────────────────────
-    bool devMode; // F1 toggles; grants immortality + all weapons
+    bool devMode;  // F1/R toggles; grants immortality + all weapons
 
-    EntityManager* entities; // non-owning — only used to spawn projectiles
+    // Per-character weapon sprite textures (loaded by loadAllWeaponSprites)
+    sf::Texture texPistol;
+    sf::Texture texMachineGun;
+    sf::Texture texRifle;
+    sf::Texture texKnife;
+    sf::Texture texFire;
 
-    // Creates weapon instances for slots 1-4 (called when dev mode is enabled).
+    float fireSpriteTimer;   // counts down; >0 means show fire sprite
+    float knifeSpriteTimer;  // counts down; >0 means show knife sprite
+
+    static constexpr float FIRE_ANIM_DURATION  = 0.15f;
+    static constexpr float KNIFE_ANIM_DURATION = 0.35f;
+
+    // Returns the texture to show based on active slot (no timers considered)
+    const sf::Texture* texForSlot(int slot) const;
+    // Swaps sprite to the correct texture for current state
+    void updateActiveSprite();
+
     void giveAllWeapons();
-
-    // Sets activeSlot; remembers previous slot so knife can return to it.
     void equipSlot(int slot);
 
 public:
-    Player(float x, float y, const Level* lvl, EntityManager* em, int hp = 5);
+    Player(float x, float y, const Level* lvl, EntityManager* em, int hp);
     virtual ~Player();
 
     Player(const Player&)            = delete;
@@ -68,19 +69,27 @@ public:
     void handleInput();
     virtual void update(float dt) override;
 
-    // Active character info — used by HUD / debug printouts.
-    CharacterType getCharacter()     const { return currentCharacter; }
-    const char*   getCharacterName() const;
+    // ── Runtime-polymorphism character switching ──────────────────────────────
+    // createNext() returns a NEW heap-allocated player of the next character
+    // in the cycle. Called by PlayState — no if/else needed at the call site.
+    virtual Player* createNext(float x, float y,
+                               const Level* lvl, EntityManager* em) const = 0;
+    // createSelf() recreates the same character type (used by respawn).
+    virtual Player* createSelf(float x, float y,
+                               const Level* lvl, EntityManager* em) const = 0;
+    // Returns a fixed int (0-3) identifying the character (used by PlayState
+    // to remember which type to respawn without storing a dead pointer).
+    virtual int getCharacterIdx() const = 0;
 
-    // Swap the pistol slot on pickup — Player takes ownership of newWeapon.
-    void    equipWeapon(Weapon* newWeapon);
-    Weapon* getWeapon() const { return weaponSlots[activeSlot]; }
-
-    // Immortality — takeDamage is a no-op while devMode is on.
+    // Immortality — no-op while devMode is on.
     virtual void takeDamage(int amount) override;
 
     void toggleDevMode();
     bool isDevMode() const { return devMode; }
+
+    // Pickup: replaces the pistol slot and takes ownership of newWeapon.
+    void    equipWeapon(Weapon* newWeapon);
+    Weapon* getWeapon() const { return weaponSlots[activeSlot]; }
 
     virtual void applyScreenClamp(float cameraX) override;
 };

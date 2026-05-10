@@ -4,7 +4,8 @@ PlayState::PlayState()
     : level(nullptr), entities(nullptr), player(nullptr),
     cameraX(0.0f), cameraY(0.0f),
     lives(3), respawnTimer(-1.0f),
-    spawnX(200.0f), spawnY(200.0f)
+    spawnX(200.0f), spawnY(200.0f),
+    respawnPrototype(nullptr)
 {
     std::cout << "PlayState Initialized.\n";
 
@@ -15,11 +16,12 @@ PlayState::PlayState()
 
     entities = new EntityManager(64);
 
-    // Spawn the player. EntityManager takes ownership from this point.
-    // We keep a raw non-owning pointer for camera tracking.
-    // Player also needs the EntityManager* so it can spawn projectiles.
-    player = new Player(200.0f, 200.0f, level, entities);
-    entities->add(player); // manager owns it now
+    // Start with Eri (she has the existing Char.png sprite).
+    // EntityManager takes ownership; player is a non-owning view.
+    player = new EriPlayer(200.0f, 200.0f, level, entities);
+    entities->add(player);
+    // Prototype mirrors the active character; used by respawnPlayer() via createSelf().
+    respawnPrototype = player->createSelf(0.0f, 0.0f, level, entities);
 
     // ── Spawn initial enemy batches ──────────────────────────────────────────
     // World is 12800px wide. 8 enemy types, one batch every 1400px.
@@ -46,6 +48,9 @@ PlayState::PlayState()
 
 PlayState::~PlayState()
 {
+    delete respawnPrototype;
+    respawnPrototype = nullptr;
+
     delete entities;
     entities = nullptr;
     player = nullptr; // dangling pointer guard (Entity manager will delete player)
@@ -57,8 +62,34 @@ PlayState::~PlayState()
 void PlayState::handleInput(sf::Event& event, sf::RenderWindow& window)
 {
     if (event.type == sf::Event::KeyPressed) {
-        if (event.key.scancode == sf::Keyboard::Scan::Escape) {
+        if (event.key.scancode == sf::Keyboard::Scan::Escape)
             window.close();
+
+        // ── Character switching via runtime polymorphism (TAB key) ────────────
+        // player->createNext() is a pure virtual call — no if/else needed here.
+        // Each concrete character class returns the next one in the cycle.
+        if (event.key.scancode == sf::Keyboard::Scan::Tab && player != nullptr) {
+            Player* next = player->createNext(
+                player->getPosX(), player->getPosY(), level, entities);
+            // Update prototype so respawn recreates the newly selected character.
+            delete respawnPrototype;
+            respawnPrototype = next->createSelf(0.0f, 0.0f, level, entities);
+
+            // Carry dev mode over to the new character before the old one is freed.
+            bool wasDevMode = player->isDevMode();
+            player->deactivateEntity();            // manager will free old player
+            entities->add(next);
+            player = next;
+            if (wasDevMode) player->toggleDevMode();
+
+            // Notify all enemies of the new player pointer so their AI retargets.
+            // Without this, enemies keep chasing the old deactivated player.
+            int n = entities->getCount();
+            for (int i = 0; i < n; i++) {
+                Entity* e = entities->getEntity(i);
+                if (e && e->getIsActive())
+                    e->onPlayerRespawn(player);
+            }
         }
     }
 }
@@ -83,10 +114,13 @@ void PlayState::update(float dt)
             e->applyScreenClamp(cameraX);
     }
 
-    // Check player death BEFORE removeDead() frees the memory — after that the
-    // pointer is dangling and getIsActive() would be undefined behaviour.
+    // Check player death BEFORE removeDead() frees the memory.
+    // Save character index NOW while the pointer is still valid.
     if (player != nullptr && !player->getIsActive()) {
-        player = nullptr; // drop the non-owning pointer; manager will free it below
+        // Clone the prototype BEFORE removeDead() frees the dead player's memory.
+        delete respawnPrototype;
+        respawnPrototype = player->createSelf(0.0f, 0.0f, level, entities);
+        player = nullptr;
         lives--;
         if (lives > 0) {
             respawnTimer = RESPAWN_DELAY;
@@ -174,7 +208,9 @@ void PlayState::respawnPlayer()
     float worldX = cameraX + spawnX;
     float worldY = cameraY + spawnY;
 
-    player = new Player(worldX, worldY, level, entities);
+    // Recreate the same character type via runtime polymorphism — no switch needed.
+    // respawnPrototype was cloned from the dying player before removeDead() freed it.
+    player = respawnPrototype->createSelf(worldX, worldY, level, entities);
     entities->add(player);
 
     // Update every living entity so enemies retarget the new player.
