@@ -1,7 +1,7 @@
 #pragma once
 #include "Entity.h"
 #include <SFML/Graphics.hpp>
-// ABSTRACT CLASS
+                                                              // ABSTRACT CLASS
 
 // Anything that can be damaged is Damageable entity. Like, soldier, enemy and vehicles.
 // This class is used to track health (current hp, max hp), invincibility time after taking 
@@ -17,12 +17,9 @@ protected:
     static const float INVINCIBILITY_DURATION;  // seconds
     static const float FLASH_INTERVAL; // flicker period (seconds)
 
-    // ── Helpers for subclasses ────────────────────────────────────────────────
-    // Call once per frame at the top of your update() to tick timers.
+   
+    // Call once per frame to update timers.
     void updateDamageTimers(float dt);
-
-    // Call just before window.draw(sprite) to apply / remove the red tint.
-    // Resets the sprite colour to white when no longer invincible.
     void applyDamageFlash(sf::Sprite& sprite) const;
 
 public:
@@ -30,15 +27,15 @@ public:
     virtual ~DamageableEntity() {}
 
     // Applies damage unless the entity is currently invincible.
-    // Triggers invincibility window; calls deactivateEntity() on death.
+    // Triggers invincibility time, calls deactivateEntity() on death.
     virtual void takeDamage(int amount);
 
-    bool isInvincible() const { return invincibilityTimer > 0.0f; }
-    int  getHP()        const { return currentHP; }
-    int  getMaxHP()     const { return maxHP; }
+    bool isInvincible() const;
+    int getHP() const;
+    int getMaxHP() const;
     void heal(int amount);
 
-    // Still pure virtual — this class is abstract.
+    // Will be used by child classes
     virtual void update(float dt) = 0;
     virtual void render(sf::RenderWindow& window, float cameraX, float cameraY) = 0;
 };

@@ -43,7 +43,7 @@ void LaserWeapon::fire(float x, float y, bool facingRight, bool fromPlayer,
         bool inX = (ex >= beamLeft && ex <= beamRight);
         bool inY = (ey >= y - vRange && ey <= y + vRange);
         if (inX && inY)
-            e->receiveProjectileHit(damage, fromPlayer);
+            e->receiveProjectileHit(9999, fromPlayer);
     }
 
     // ── Spawn visual beam ─────────────────────────────────────────────────────

@@ -43,6 +43,11 @@ public:
     // Intercepts death to trigger resurrection instead of deactivation.
     virtual void takeDamage(int amount) override;
 
+    // Mummy can ONLY be permanently killed by fire or explosions.
+    // Both bypass the resurrection cycle.
+    virtual bool receiveFireHit(int damage, bool fromPlayer) override;
+    virtual bool receiveExplosionHit(int damage, bool fromPlayer) override;
+
     // Ticks the resurrection timer and handles melee contact.
     virtual void update(float dt) override;
 

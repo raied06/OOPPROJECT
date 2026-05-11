@@ -5,27 +5,12 @@
 #include <iostream>
 
 
-Enemy::Enemy(float x, float y, float targetH,
-             int hp,
-             const char*    spritePath,
-             const Level*   lvl,
-             Player*        p,
-             EntityManager* em)
-    : DamageableEntity(x, y, 1.0f, targetH, hp),
-      level(lvl),
-      player(p),
-      entities(em),
-      currentState(nullptr),
-      weapon(nullptr),
-      facingRight(false),
-      baseScaleX(1.0f),
-      baseScaleY(1.0f),
-      onGround(false),
-      moveSpeed(120.0f),
-      gravity(1500.0f),
-      maxFallSpeed(1200.0f),
-      detectionRange(315.0f),
-      attackRange(250.0f)
+Enemy::Enemy(float x, float y, float targetH, int hp,
+             const char* spritePath,
+             const Level* lvl, Player* p, EntityManager* em) : DamageableEntity(x, y, 1.0f, targetH, hp),
+      level(lvl), player(p), entities(em), currentState(nullptr), weapon(nullptr), facingRight(false),
+      baseScaleX(1.0f), baseScaleY(1.0f), onGround(false), moveSpeed(120.0f), gravity(1500.0f), maxFallSpeed(1200.0f),
+      detectionRange(315.0f), attackRange(250.0f)
 {
     texture.loadFromFile(spritePath);
     loadTexture(targetH);
@@ -156,8 +141,7 @@ void Enemy::fireWeapon()
     weapon->fire(
         positionX + entityWidth  * 0.5f,
         positionY + entityHeight * 0.5f,
-        facingRight,
-        false,      // NOT from player → won't damage the player's own entity
+        facingRight, false, // avoid friendly fire
         *entities
     );
 }
@@ -210,7 +194,7 @@ void Enemy::resolveVertical()
         }
     }
     else {
-        // Check we haven't walked off a ledge.
+        // Check we haven't walked off any blocks edge.
         float feetY = positionY + entityHeight + 1.0f;
         int hitRow;
         if (!level->checkGroundBelow(feetY, leftX, rightX, hitRow))
@@ -277,10 +261,16 @@ void Enemy::render(sf::RenderWindow& window, float cameraX, float cameraY)
     window.draw(sprite);
 }
 
+void Enemy::onPlayerRespawn(Player* newPlayer)
+{
+    player = newPlayer;
+}
+
 void Enemy::applyScreenClamp(float cameraX)
 {
     // Don't clamp enemies that haven't been reached by the camera yet.
-    if (positionX > cameraX + 1600.0f) return;
+    if (positionX > cameraX + 1600.0f) 
+        return;
 
     float rightLimit = cameraX + 1600.0f - entityWidth;
     if (positionX > rightLimit) {

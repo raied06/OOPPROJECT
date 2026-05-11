@@ -17,6 +17,11 @@ void Projectile::applyScreenClamp(float cameraX)
         deactivateEntity();
 }
 
+bool Projectile::dispatchHit(Entity* target)
+{
+    return target->receiveProjectileHit(damage, fromPlayer);
+}
+
 void Projectile::checkEntityCollisions()
 {
     if (!entities || !isActive) return;
@@ -27,9 +32,10 @@ void Projectile::checkEntityCollisions()
         if (!target || !target->getIsActive() || target == this) continue;
 
         if (isOverlapping(target)) {
-            // receiveProjectileHit() is virtual — Enemy accepts player bullets,
-            // Soldier/Player accepts enemy bullets, everything else returns false.
-            bool accepted = target->receiveProjectileHit(damage, fromPlayer);
+            // Virtual dispatch — subclasses (e.g. FlameProjectile) route the
+            // hit through a different damage channel so things like the mummy's
+            // fire-only kill rule can be expressed cleanly.
+            bool accepted = dispatchHit(target);
             if (accepted) {
                 deactivateEntity();
                 return;

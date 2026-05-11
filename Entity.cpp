@@ -87,3 +87,8 @@ bool Entity::isOverlapping(const Entity* other) const
 	}
 	return true;
 }
+
+bool Entity::receiveProjectileHit(int damage, bool fromPlayer)
+{
+	return false;
+}

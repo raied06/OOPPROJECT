@@ -22,10 +22,13 @@ protected:
     const Level*   level;         // non-owning
     EntityManager* entities;      // non-owning — used to iterate hit targets
 
-    // Iterates all active entities; calls receiveProjectileHit() on each
-    // overlapping one. Deactivates self on the first accepted hit.
-    // Pure virtual dispatch handles which entity type accepts which bullet.
+    // Iterates all active entities; calls dispatchHit() on each overlapping
+    // one. Deactivates self on the first accepted hit.
     void checkEntityCollisions();
+
+    // Hands the actual damage to a target entity. Subclasses override to pick
+    // a different damage channel (e.g. FlameProjectile uses receiveFireHit).
+    virtual bool dispatchHit(Entity* target);
 
 public:
     Projectile(float x, float y, float w, float h,

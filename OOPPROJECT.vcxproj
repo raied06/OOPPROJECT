@@ -177,6 +177,7 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     <ClInclude Include="MarcoPlayer.h" />
     <ClInclude Include="Martian.h" />
     <ClInclude Include="MeleeWeapon.h" />
+    <ClInclude Include="MenuState.h" />
     <ClInclude Include="MummyWarrior.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="Paratrooper.h" />
@@ -213,6 +214,7 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     <ClCompile Include="MarcoPlayer.cpp" />
     <ClCompile Include="Martian.cpp" />
     <ClCompile Include="MeleeWeapon.cpp" />
+    <ClCompile Include="MenuState.cpp" />
     <ClCompile Include="MummyWarrior.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="main.cpp" />

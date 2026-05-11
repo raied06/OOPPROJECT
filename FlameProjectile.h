@@ -18,4 +18,11 @@ public:
 
     void update(float dt) override;
     void render(sf::RenderWindow& window, float cameraX, float cameraY) override;
+
+protected:
+    // Fire deals damage through the fire channel (mummies only die from this).
+    bool dispatchHit(Entity* target) override
+    {
+        return target->receiveFireHit(damage, fromPlayer);
+    }
 };

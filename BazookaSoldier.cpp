@@ -1,18 +1,18 @@
 #include "BazookaSoldier.h"
 #include "ProjectileWeapon.h"
 
-// ── Tuning constants ──────────────────────────────────────────────────────────
-static constexpr float BAZOOKA_TARGET_H     = 150.0f; // matches player height
-static constexpr int   BAZOOKA_HP           = 2;
-static constexpr float BAZOOKA_MOVE_SPEED   = 70.0f;
-static constexpr float BAZOOKA_DETECT_RANGE = 500.0f;
-static constexpr float BAZOOKA_ATTACK_RANGE = 350.0f;
+static const float BAZOOKA_TARGET_H = 150.0f;
+static const int   BAZOOKASOLDIER_HP = 2;
+static const float BAZOOKA_MOVE_SPEED = 70.0f;
+static const float BAZOOKA_DETECT_RANGE = 500.0f;
+static const float BAZOOKA_ATTACK_RANGE = 350.0f;
 
-// Rocket launcher: slow, high-damage, ballistic arc
-static constexpr float ROCKET_COOLDOWN = 3.0f;   // 3 seconds between shots
-static constexpr int   ROCKET_DAMAGE   = 5;
-static constexpr float ROCKET_SPEED    = 320.0f;  // slower projectile
-// ─────────────────────────────────────────────────────────────────────────────
+// ROCKET STATS
+static const float ROCKET_COOLDOWN = 3.0f;   // 3 seconds between shots
+static const int ROCKET_DAMAGE = 5;
+static const float ROCKET_SPEED = 380.0f;  // shorter projectile (steeper arc)
+
+// ------------------------------------------------------------------------------------------------------=
 
 BazookaSoldier::BazookaSoldier(float x, float y,
                                const Level*   lvl,
@@ -20,7 +20,7 @@ BazookaSoldier::BazookaSoldier(float x, float y,
                                EntityManager* em)
     : Enemy(x, y,
             BAZOOKA_TARGET_H,
-            BAZOOKA_HP,
+            BAZOOKASOLDIER_HP,
             "Sprites/Enemies/bazooka_soldier.png",
             lvl, p, em)
 {
@@ -28,14 +28,19 @@ BazookaSoldier::BazookaSoldier(float x, float y,
     detectionRange = BAZOOKA_DETECT_RANGE;
     attackRange    = BAZOOKA_ATTACK_RANGE;
 
-    // Ballistic (gravity-affected) rocket — high damage, slow fire rate.
+    // Ballistic Projectile Weapon so gravity will effect it
     weapon = new ProjectileWeapon(
         ROCKET_COOLDOWN,
         ROCKET_DAMAGE,
-        -1,            // infinite ammo (re-loaded from back-line)
+        -1,            // infinite ammo
         ROCKET_SPEED,
         true,          // gravity affects trajectory
         sf::Color(255, 100, 30),  // orange rocket
         lvl
     );
+}
+
+int BazookaSoldier::getScoreValue() const
+{
+    return 300;
 }

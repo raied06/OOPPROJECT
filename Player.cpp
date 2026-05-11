@@ -120,11 +120,12 @@ void Player::updateActiveSprite()
     if (sprite.getTexture() != chosen) {
         sprite.setTexture(*chosen, true);
 
-        // Recompute scale so every texture fills exactly PLAYER_H in height.
-        // entityWidth stays locked to the pistol sprite for physics — only the
-        // visual scale changes here.
-        float sy = PLAYER_H / static_cast<float>(chosen->getSize().y);
-        float sx = PLAYER_H / static_cast<float>(chosen->getSize().y);
+        // Force every sprite to fill exactly the same on-screen footprint
+        // (entityWidth × PLAYER_H) regardless of its source pixel dimensions.
+        // This prevents an oversized source image (e.g. Tarma_Fire.png) from
+        // rendering larger than the pistol/knife sprites for the same character.
+        float sy = PLAYER_H    / static_cast<float>(chosen->getSize().y);
+        float sx = entityWidth / static_cast<float>(chosen->getSize().x);
         setBaseScale(sx, sy);
         sprite.setScale(sx, sy);
     }
@@ -191,9 +192,9 @@ void Player::giveAllWeapons()
         weaponSlots[1] = new ProjectileWeapon(
             0.08f, 1, -1, 700.0f, false, sf::Color(255, 200, 50), level);
 
-    if (!weaponSlots[2]) // Rocket Launcher — 100 px explosion
+    if (!weaponSlots[2]) // Rocket Launcher — 192 px explosion (3 blocks × 64 px)
         weaponSlots[2] = new ProjectileWeapon(
-            1.2f, 8, -1, 400.0f, true, sf::Color(255, 100, 50), level, 100.0f);
+            1.2f, 8, -1, 400.0f, true, sf::Color(255, 100, 50), level, 192.0f);
 
     if (!weaponSlots[3]) // Grenade Launcher — 120 px explosion
         weaponSlots[3] = new ProjectileWeapon(
@@ -202,8 +203,8 @@ void Player::giveAllWeapons()
     if (!weaponSlots[4]) // Knife — melee, 90 px reach (character-specific via createKnife)
         weaponSlots[4] = createKnife();
 
-    if (!weaponSlots[5]) // Flame Shot
-        weaponSlots[5] = new FlameWeapon(0.1f, 2, level, 180.0f);
+    if (!weaponSlots[5]) // Flame Shot — 5 blocks range (5 × 64 = 320 px), 2 HP/s via invincibility window
+        weaponSlots[5] = new FlameWeapon(0.1f, 2, level, 320.0f);
 
     if (!weaponSlots[6]) // Laser Gun
         weaponSlots[6] = new LaserWeapon(1.0f, 6, level, 1200.0f);
@@ -322,7 +323,7 @@ void Player::handleInput()
                  || Keyboard::isKeyPressed(Keyboard::P);
     // HMG (slot 1) and characters with autoFire-on-hold (Fiolina supercharge)
     // fire continuously while held; everything else needs an edge-press.
-    bool autoFire  = (activeSlot == 1) || autoFireOnHold();
+    bool autoFire  = (activeSlot == 1) || (activeSlot == 5) || autoFireOnHold();
     bool shouldFire = autoFire ? fireHeld : (fireHeld && !fireHeldLastFrame);
     if (shouldFire) {
         Weapon* w = weaponSlots[activeSlot];

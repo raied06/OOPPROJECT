@@ -1,12 +1,12 @@
 #include "Game.h"
-#include "PlayState.h"
+#include "MenuState.h"
 
 Game::Game() : window(sf::VideoMode(1600, 900), "METAL SLUG", sf::Style::Close) {
     window.setFramerateLimit(60); // Upper cap for frames (max fps that we can get are 60, not more than this)
     window.setVerticalSyncEnabled(true);
 
-    // Starting a state
-    stateManager.pushState(new PlayState());
+    // Show the main menu first; it will push PlayState when the player chooses.
+    stateManager.pushState(new MenuState(stateManager, window));
 }
 
 void Game::run() {

@@ -1,18 +1,8 @@
 #pragma once
 
-// Forward declaration prevents circular include (Enemy.h includes this file;
-// EnemyAIState only needs Enemy as a reference parameter).
-class Enemy;
+class Enemy; // Forward decleration to avoid circular dependancy i.e, Enemy.h include this file and this will include Enemy.h
 
-// ═════════════════════════════════════════════════════════════════════════════
-// EnemyAIState  —  abstract base for the State Pattern
-// ═════════════════════════════════════════════════════════════════════════════
-// Each concrete state owns its own behaviour. The enemy calls update() each
-// frame; if a transition is needed the state allocates the new state on the
-// heap and returns it. The enemy then swaps it in (deletes the old one).
-//
-// Returning nullptr means "stay in this state".
-// ─────────────────────────────────────────────────────────────────────────────
+//                                                                  ABSTRACT BASE CLASS
 class EnemyAIState
 {
 public:
@@ -20,51 +10,42 @@ public:
 
     // Called once immediately after the state becomes active.
     virtual void enter(Enemy& enemy) = 0;
-
-    // Called every frame. Returns the next state to transition to,
-    // or nullptr to remain in the current state.
+    // Called every frame. Returns the next state to transition into, or nullptr to remain in the current state.
     virtual EnemyAIState* update(Enemy& enemy, float dt) = 0;
-
-    // Called once just before the state is replaced/destroyed.
+    // Called once just before the state is replaced or destroyed.
     virtual void exit(Enemy& enemy) = 0;
 };
 
 
-// ═════════════════════════════════════════════════════════════════════════════
-// PatrolState
-// ═════════════════════════════════════════════════════════════════════════════
-// The enemy walks back-and-forth on a timer. If the player steps within
-// detectionRange it transitions to ChaseState.
+//                         PATROL STATE
+// The enemy walks back and forth with pausees, if player gets in detection range, they transition to chase state
 // ─────────────────────────────────────────────────────────────────────────────
 class PatrolState : public EnemyAIState
 {
     float patrolTimer;      // time elapsed walking in the current direction
-    float patrolDuration;   // seconds before turning around
+    float patrolDuration;   // time before turning around
     bool  walkingRight;
 
 public:
-    // patrolDuration: how many seconds before reversing (default 4 s)
+    // Patrol duration i.e, how many seconds before reversing (default 4s)
     explicit PatrolState(float duration = 4.0f);
 
-    void           enter(Enemy& enemy) override;
-    EnemyAIState*  update(Enemy& enemy, float dt) override;
-    void           exit(Enemy& enemy) override;
+    void enter(Enemy& enemy) override;
+    EnemyAIState* update(Enemy& enemy, float dt) override;
+    void exit(Enemy& enemy) override;
 };
 
-
-// ═════════════════════════════════════════════════════════════════════════════
-// ChaseState
-// ═════════════════════════════════════════════════════════════════════════════
+// CHASE STATE
 // The enemy moves toward the player every frame.
-//   • Player enters attackRange  → AttackState
-//   • Player leaves detectionRange → PatrolState
+//  If Player enters attackRange, enemy transitions to AttackState
+//  If Player leaves detectionRange, enemy transitions to PatrolState
 // ─────────────────────────────────────────────────────────────────────────────
 class ChaseState : public EnemyAIState
 {
 public:
-    void           enter(Enemy& enemy) override;
-    EnemyAIState*  update(Enemy& enemy, float dt) override;
-    void           exit(Enemy& enemy) override;
+    void enter(Enemy& enemy) override;
+    EnemyAIState* update(Enemy& enemy, float dt) override;
+    void exit(Enemy& enemy) override;
 };
 
 
@@ -77,50 +58,25 @@ public:
 class ParachuteState : public EnemyAIState
 {
 public:
-    void           enter(Enemy& enemy) override;
-    EnemyAIState*  update(Enemy& enemy, float dt) override;
-    void           exit(Enemy& enemy) override;
+    void enter(Enemy& enemy) override;
+    EnemyAIState* update(Enemy& enemy, float dt) override;
+    void exit(Enemy& enemy) override;
 };
 
 
-// ═════════════════════════════════════════════════════════════════════════════
-// MartianFlyState  —  Phase 1 of the Martian (pod flying toward player)
-// ═════════════════════════════════════════════════════════════════════════════
-// Martian hovers at a fixed height and drifts horizontally toward the player.
-// After flyDuration seconds (or when close enough) it descends to the ground
-// and transitions to AttackState for its energy-beam phase.
-// ─────────────────────────────────────────────────────────────────────────────
-class MartianFlyState : public EnemyAIState
-{
-    float flyTimer;       // counts down; when 0 → descend
-    float flyDuration;
-    bool  descending;
-
-public:
-    explicit MartianFlyState(float duration = 4.0f);
-
-    void           enter(Enemy& enemy) override;
-    EnemyAIState*  update(Enemy& enemy, float dt) override;
-    void           exit(Enemy& enemy) override;
-};
-
-
-// ═════════════════════════════════════════════════════════════════════════════
-// AttackState
-// ═════════════════════════════════════════════════════════════════════════════
-// The enemy stops moving and fires continuously on a cooldown while the player
-// stays within attackRange. Transitions to ChaseState if the player escapes.
-// ─────────────────────────────────────────────────────────────────────────────
+//                      ATTACK STATE
+// The enemy stops moving and fires continuously towards the pllayer with a cooldown until the player leaves attack range.
+// If player runs away, then transitions to chaseState.
 class AttackState : public EnemyAIState
 {
     float attackCooldown;   // seconds between shots
-    float cooldownTimer;    // counts DOWN to next shot
+    float cooldownTimer;    // countdown to next shot
 
 public:
     // attackCooldown: seconds between shots (default 1.2 s)
-    explicit AttackState(float attackCooldown = 1.2f, int /*unused*/ = 0);
+    explicit AttackState(float attackCooldown = 1.2f, int = 0);
 
-    void           enter(Enemy& enemy) override;
-    EnemyAIState*  update(Enemy& enemy, float dt) override;
-    void           exit(Enemy& enemy) override;
+    void enter(Enemy& enemy) override;
+    EnemyAIState* update(Enemy& enemy, float dt) override;
+    void exit(Enemy& enemy) override;
 };

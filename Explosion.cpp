@@ -45,7 +45,7 @@ void Explosion::update(float dt)
             float dy = ey - cy;
             // Avoid sqrt — compare squared distances
             if (dx * dx + dy * dy < radius * radius)
-                e->receiveProjectileHit(damage, fromPlayer);
+                e->receiveExplosionHit(damage, fromPlayer);
         }
         hasExploded = true;
     }

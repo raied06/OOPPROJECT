@@ -24,8 +24,8 @@ protected:
     Player* player; // Used to track player (enemy's charge towards it)
     EntityManager* entities;  // Entity array to spawn projectiles
 
-    EnemyAIState* currentState; // Composed here
-    Weapon* weapon; // Composed here
+    EnemyAIState* currentState; // Composition
+    Weapon* weapon; // COMPOSITION
 
 // SPRITE (VISUALS)
     sf::Texture texture;
@@ -45,10 +45,6 @@ protected:
     float detectionRange;
     float attackRange;
 
-    // ── Internal helpers ─────────────────────────────────────────────────────
-    // Try to load a texture and compute hitbox width from it.
-    // Returns false and falls back to placeholder rectangle if the file
-    // does not exist — enemies will still function fully.
     bool loadTexture(float targetH);
 
     void resolveHorizontal();
@@ -93,6 +89,7 @@ public:
     Player* getPlayer() const;
     float getWidth() const;
     float getVelocityY() const;
-    virtual void onPlayerRespawn(Player* newPlayer) override { player = newPlayer; }
+
+    virtual void onPlayerRespawn(Player* newPlayer) override; 
     virtual void applyScreenClamp(float cameraX) override;
 };

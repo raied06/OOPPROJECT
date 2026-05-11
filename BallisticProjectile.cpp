@@ -2,7 +2,7 @@
 #include "EntityManager.h"
 #include "Explosion.h"
 
-static constexpr float RADIUS = 7.0f;
+static const float RADIUS = 7.0f;
 
 BallisticProjectile::BallisticProjectile(float x, float y,
                                           float vx, float vy,
@@ -37,9 +37,7 @@ void BallisticProjectile::update(float dt)
     positionX += velocityX * dt;
     positionY += velocityY * dt;
 
-    if (positionX < 0.0f ||
-        positionX > static_cast<float>(level->getWidthInPixels()) ||
-        positionY > static_cast<float>(level->getHeightInPixels())) {
+    if (positionX < 0.0f || positionX > (float)(level->getWidthInPixels()) || positionY > (float)(level->getHeightInPixels())) {
         deactivateEntity();
         return;
     }

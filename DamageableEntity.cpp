@@ -15,7 +15,7 @@ DamageableEntity::DamageableEntity(float x, float y, float w, float h, int hp)
 void DamageableEntity::takeDamage(int amount)
 {
     if (!isActive)
-        return; // already dead
+        return; // means already dead
     if (invincibilityTimer > 0.0f)
         return; // invincibility time (ignoring any hit taken)
     if (amount <= 0)
@@ -25,13 +25,28 @@ void DamageableEntity::takeDamage(int amount)
 
     if (currentHP <= 0) {
         currentHP = 0;
-        deactivateEntity(); // mark for removal on the next cleanup pass
+        deactivateEntity(); // The entity will be removed from screen the next frame
     }
     else {
         // Start the 1-second invincibility window and reset the flicker phase.
         invincibilityTimer = INVINCIBILITY_DURATION;
         flashTimer = 0.0f;
     }
+}
+
+bool DamageableEntity::isInvincible() const
+{
+    return invincibilityTimer > 0.0f;
+}
+
+int DamageableEntity::getHP() const
+{
+    return this->currentHP;
+}
+
+int DamageableEntity::getMaxHP() const
+{
+    return this->maxHP;
 }
 
 void DamageableEntity::heal(int amount)
@@ -42,8 +57,6 @@ void DamageableEntity::heal(int amount)
     if (currentHP > maxHP)
         currentHP = maxHP;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 void DamageableEntity::updateDamageTimers(float dt)
 {

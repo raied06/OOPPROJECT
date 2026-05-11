@@ -40,16 +40,44 @@ void MummyWarrior::takeDamage(int amount)
     // Let the base class apply damage (it calls deactivateEntity() at 0 HP).
     Enemy::takeDamage(amount);
 
-    // If we just died and have resurrections left, come back.
-    if (!isActive && resurrectionCount < MAX_RESURRECTIONS) {
-        isActive          = true;         // override the deactivation
-        currentHP         = maxHP;        // restore full health
+    // Bullets / knife can never kill the mummy permanently — it always
+    // crumbles and rises again. The ONLY ways to make the kill stick are
+    // fire and explosions, which call Enemy::takeDamage directly via
+    // receiveFireHit / receiveExplosionHit and bypass this override.
+    if (!isActive) {
+        isActive          = true;         // undo the base-class deactivation
+        currentHP         = maxHP;        // back to full health
         resurrectionTimer = RESURRECTION_DELAY;
         resurrectionCount++;
         invincibilityTimer = RESURRECTION_DELAY; // invincible while crumbling
         flashTimer         = 0.0f;
         stopMoving();
     }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Fire / explosion bypass — these are the ONLY damage channels that can kill
+// a mummy permanently. They skip the crumble-and-rise cycle entirely.
+// ─────────────────────────────────────────────────────────────────────────────
+
+bool MummyWarrior::receiveFireHit(int /*damage*/, bool fromPlayer)
+{
+    if (!fromPlayer) return false;
+    // Disable any further resurrection AND clear the crumble invincibility,
+    // then push HP straight to zero so the entity stays dead.
+    resurrectionCount = MAX_RESURRECTIONS;
+    resurrectionTimer = 0.0f;
+    Enemy::takeDamage(9999);
+    return true;
+}
+
+bool MummyWarrior::receiveExplosionHit(int /*damage*/, bool fromPlayer)
+{
+    if (!fromPlayer) return false;
+    resurrectionCount = MAX_RESURRECTIONS;
+    resurrectionTimer = 0.0f;
+    Enemy::takeDamage(9999);
+    return true;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
